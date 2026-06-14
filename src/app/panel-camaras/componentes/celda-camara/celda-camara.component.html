@@ -38,7 +38,7 @@
          alt="CAM {{ camara.camara_id }}" />
 
     <!-- Overlay SVG bboxes sobre stream en vivo -->
-    @if (iaVivaActiva() && detecciones().length > 0) {
+    @if (detecciones().length > 0) {
       <svg class="celda__detecciones" viewBox="0 0 100 100" preserveAspectRatio="none">
         @for (d of detecciones(); track $index) {
           <rect [attr.x]="d.bbox.x * 100" [attr.y]="d.bbox.y * 100"
@@ -56,7 +56,7 @@
     }
 
     <!-- Alertas en vivo -->
-    @if (iaVivaActiva() && alertasModel().length > 0) {
+    @if (alertasModel().length > 0) {
       <div class="ia-resultado-overlay">
         @for (alerta of alertasModel(); track alerta) {
           <div class="ia-resultado-badge ia-resultado-badge--alerta">
@@ -70,16 +70,8 @@
       </div>
     }
 
-    <!-- Botón IA en vivo -->
-    @if (!errorStream() && !cargando()) {
-      <button class="btn-ia-viva" [class.btn-ia-viva--activo]="iaVivaActiva()"
-              (click)="toggleIaViva()" title="Análisis IA en tiempo real">
-        <span class="material-icons">{{ iaVivaActiva() ? 'stop_circle' : 'psychology' }}</span>
-      </button>
-    }
-
     <!-- Indicador escaneando -->
-    @if (iaVivaActiva() && analizando()) {
+    @if (analizando()) {
       <div class="ia-scan"><span class="ia-scan__dot"></span> IA</div>
     }
   }

@@ -32,14 +32,16 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly arrastrando = signal(false);
   readonly archivoUrl  = signal<string | null>(null);
   readonly esVideo     = signal(false);
-  readonly detecciones = signal<Deteccion[]>([]);
-  readonly analizando  = signal(false);
-  readonly fps         = signal(0);   // frames analizados en último segundo
+  readonly detecciones  = signal<Deteccion[]>([]);
+  readonly analizando   = signal(false);
+  readonly fps          = signal(0);
   readonly alertasModel = signal<string[]>([]);
   readonly razaModel    = signal<string | null>(null);
+  readonly iaVivaActiva = signal(false);
 
-  private intervaloReloj?:  ReturnType<typeof setInterval>;
-  private intervaloFrames?: ReturnType<typeof setInterval>;
+  private intervaloReloj?:   ReturnType<typeof setInterval>;
+  private intervaloFrames?:  ReturnType<typeof setInterval>;
+  private intervaloIaViva?:  ReturnType<typeof setInterval>;
 
   ngOnInit() {
     this.intervaloReloj = setInterval(() => this.horaActual.set(new Date()), 1000);
@@ -48,8 +50,39 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     clearInterval(this.intervaloReloj);
     clearInterval(this.intervaloFrames);
+    clearInterval(this.intervaloIaViva);
     const url = this.archivoUrl();
     if (url) URL.revokeObjectURL(url);
+  }
+
+  private _iniciarIaViva() {
+    if (this.iaVivaActiva()) return;
+    this.iaVivaActiva.set(true);
+    this._llamarIaViva();
+    this.intervaloIaViva = setInterval(() => this._llamarIaViva(), 4000);
+  }
+
+  private _detenerIaViva() {
+    clearInterval(this.intervaloIaViva);
+    this.iaVivaActiva.set(false);
+    this.detecciones.set([]);
+    this.alertasModel.set([]);
+  }
+
+  private _llamarIaViva() {
+    if (this.analizando()) return;
+    this.analizando.set(true);
+    this.ia.analizarCamaraViva(this.camara.camara_id).subscribe({
+      next: r => {
+        const soloPersonas = (r.detecciones ?? []).filter(
+          d => d.clase === 'persona' && d.confianza >= 0.9
+        );
+        this.detecciones.set(soloPersonas);
+        this.alertasModel.set(r.alertas ?? []);
+        this.analizando.set(false);
+      },
+      error: () => this.analizando.set(false),
+    });
   }
 
   // ── URL del stream MJPEG (token en query param para <img>) ──
@@ -58,8 +91,8 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     return `${entorno.apiUrl}/camaras/${this.camara.camara_id}/stream/?token=${encodeURIComponent(token)}`;
   }
 
-  alCargar()  { this.cargando.set(false); this.errorStream.set(false); }
-  alError()   { this.cargando.set(false); this.errorStream.set(true);  }
+  alCargar()  { this.cargando.set(false); this.errorStream.set(false); this._iniciarIaViva(); }
+  alError()   { this.cargando.set(false); this.errorStream.set(true);  this._detenerIaViva(); }
 
   // ── Drag & Drop ──
   onDragOver(ev: DragEvent)  { ev.preventDefault(); this.arrastrando.set(true);  }
@@ -132,11 +165,10 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
 
   volverALive() {
     clearInterval(this.intervaloFrames);
+    this._detenerIaViva();
     const url = this.archivoUrl();
     if (url) URL.revokeObjectURL(url);
     this.archivoUrl.set(null);
-    this.detecciones.set([]);
-    this.alertasModel.set([]);
     this.razaModel.set(null);
     this.modo.set('live');
     this.cargando.set(true);
