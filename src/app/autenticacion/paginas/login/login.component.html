@@ -1,35 +1,130 @@
 <div class="login-pagina">
-  <div class="login-tarjeta">
-    <div class="login-tarjeta__logo">
-      <span class="material-icons">security</span>
-      <h1>SIVIC</h1>
-      <p>Sistema de Visión Inteligente</p>
+
+  <!-- ── Panel izquierdo (hero) ─────────────── -->
+  <div class="hero-panel">
+
+    <!-- Estado LOGIN -->
+    <div class="hero-estado hero-estado--login" [class.hero-sale]="modo() === 'registro'">
+      <img src="assets/logo.png" alt="SIVIC" class="hero-logo" />
+      <h1 class="hero-titulo">SIVIC</h1>
+      <p class="hero-slogan">Sistema de Vigilancia Inteligente</p>
+      <p class="hero-desc">
+        Monitoreo inteligente con IA para condominios modernos.
+        Seguridad 24/7 sin interrupciones.
+      </p>
+      <div class="hero-features">
+        <div class="hero-feature"><span class="material-icons">videocam</span> Cámaras en tiempo real</div>
+        <div class="hero-feature"><span class="material-icons">psychology</span> Análisis con inteligencia artificial</div>
+        <div class="hero-feature"><span class="material-icons">notifications_active</span> Alertas instantáneas</div>
+      </div>
+      <div class="hero-cta">
+        <span class="hero-cta__label">¿No tienes cuenta?</span>
+        <button class="boton-outline" (click)="cambiarModo('registro')">Registrarse →</button>
+      </div>
     </div>
 
-    <form [formGroup]="formulario" (ngSubmit)="enviar()" class="login-tarjeta__form">
-      @if (error()) {
-        <div class="login-tarjeta__error">{{ error() }}</div>
+    <!-- Estado REGISTRO (planes) -->
+    <div class="hero-estado hero-estado--planes" [class.hero-entra]="modo() === 'registro'">
+      <h2 class="planes-titulo">Elige tu membresía</h2>
+      <p class="planes-sub">
+        Adquiere un plan y obtén acceso completo a todos<br>los servicios de vigilancia inteligente
+      </p>
+      <div class="planes-lista">
+        @for (plan of planes; track plan.nombre) {
+          <div class="plan-card" [class.plan-card--destacado]="plan.destacado">
+            @if (plan.destacado) { <span class="plan-badge">Popular</span> }
+            <div class="plan-card__icono">{{ plan.icono }}</div>
+            <div class="plan-card__nombre">{{ plan.nombre }}</div>
+            <div class="plan-card__precio">{{ plan.precio }}</div>
+            <ul class="plan-card__features">
+              @for (f of plan.funcionalidades; track f) {
+                <li><span class="material-icons">check</span> {{ f }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+      <button class="enlace-volver" (click)="cambiarModo('login')">← Ya tengo cuenta</button>
+    </div>
+
+  </div>
+
+  <!-- ── Panel derecho (formularios) ───────── -->
+  <div class="form-panel">
+
+    <!-- LOGIN -->
+    <div class="formulario-wrap" [class.formulario-wrap--oculto]="modo() === 'registro'">
+      <div class="form-header">
+        <h2>Iniciar sesión</h2>
+        <p class="texto-2">Bienvenido de vuelta</p>
+      </div>
+      @if (error() && modo() === 'login') {
+        <div class="form-error">{{ error() }}</div>
       }
+      <form [formGroup]="formularioLogin" (ngSubmit)="enviarLogin()" class="form-body">
+        <div class="campo">
+          <label class="campo__etiqueta" for="email-login">Correo electrónico</label>
+          <input id="email-login" class="campo__entrada" type="email"
+                 formControlName="email" placeholder="admin@condominio.com" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta" for="password-login">Contraseña</label>
+          <input id="password-login" class="campo__entrada" type="password"
+                 formControlName="password" placeholder="••••••••" />
+        </div>
+        <button class="boton-primario" type="submit"
+                [disabled]="cargando() || formularioLogin.invalid">
+          {{ cargando() ? 'Ingresando…' : 'Ingresar' }}
+        </button>
+      </form>
+      <p class="form-alterno">
+        ¿No tienes cuenta?
+        <button class="enlace" (click)="cambiarModo('registro')">Registrarse</button>
+      </p>
+    </div>
 
-      <div class="campo">
-        <label class="campo__etiqueta" for="email">Correo electrónico</label>
-        <input id="email" class="campo__entrada" type="email"
-               formControlName="email" autocomplete="email"
-               placeholder="admin@condominio.com" />
+    <!-- REGISTRO -->
+    <div class="formulario-wrap" [class.formulario-wrap--oculto]="modo() === 'login'">
+      <div class="form-header">
+        <h2>Crear cuenta</h2>
+        <p class="texto-2">Únete a SIVIC hoy</p>
       </div>
+      @if (error() && modo() === 'registro') {
+        <div class="form-error">{{ error() }}</div>
+      }
+      <form [formGroup]="formularioRegistro" (ngSubmit)="enviarRegistro()" class="form-body">
+        <div class="campo">
+          <label class="campo__etiqueta">Nombre completo</label>
+          <input class="campo__entrada" type="text"
+                 formControlName="nombre" placeholder="Juan Pérez" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta">Correo electrónico</label>
+          <input class="campo__entrada" type="email"
+                 formControlName="email" placeholder="juan@condominio.com" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta">Contraseña</label>
+          <input class="campo__entrada" type="password"
+                 formControlName="password" placeholder="Mínimo 8 caracteres" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta">Rol</label>
+          <select class="campo__entrada" formControlName="rol">
+            <option value="guardia">Guardia</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <button class="boton-primario" type="submit"
+                [disabled]="cargando() || formularioRegistro.invalid">
+          {{ cargando() ? 'Registrando…' : 'Crear cuenta' }}
+        </button>
+      </form>
+      <p class="form-alterno">
+        ¿Ya tienes cuenta?
+        <button class="enlace" (click)="cambiarModo('login')">Iniciar sesión</button>
+      </p>
+    </div>
 
-      <div class="campo">
-        <label class="campo__etiqueta" for="password">Contraseña</label>
-        <input id="password" class="campo__entrada" type="password"
-               formControlName="password" autocomplete="current-password"
-               placeholder="••••••••" />
-      </div>
-
-      <button class="boton-primario login-tarjeta__btn"
-              type="submit"
-              [disabled]="cargando() || formulario.invalid">
-        {{ cargando() ? 'Ingresando…' : 'Ingresar' }}
-      </button>
-    </form>
   </div>
 </div>

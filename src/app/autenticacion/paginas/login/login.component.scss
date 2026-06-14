@@ -1,42 +1,336 @@
+/* ═══════════════════════════════════════════════
+   SIVIC — Login / Registro animado
+   ═══════════════════════════════════════════════ */
+
 .login-pagina {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--fondo);
-  padding: 20px;
 }
 
-.login-tarjeta {
+/* ── Hero (izquierda) ────────────────────────── */
+.hero-panel {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #020c1b 0%, #0a1e42 55%, #020c1b 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 30% 60%, rgba(31,111,235,.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 20%, rgba(31,111,235,.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+}
+
+.hero-estado {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  text-align: center;
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+/* Estado login: visible por defecto, sale hacia la izquierda */
+.hero-estado--login {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+
+  &.hero-sale {
+    opacity: 0;
+    transform: translateX(-48px);
+    pointer-events: none;
+  }
+}
+
+/* Estado planes: oculto por defecto, entra desde la derecha */
+.hero-estado--planes {
+  opacity: 0;
+  transform: translateX(48px);
+  pointer-events: none;
+
+  &.hero-entra {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+}
+
+.hero-logo {
+  width: 100px;
+  height: 100px;
+  border-radius: 22px;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 0 24px rgba(31,111,235,.65));
+  animation: flotar 3.5s ease-in-out infinite;
+}
+
+@keyframes flotar {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.hero-titulo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 56px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 3px;
+  margin: 0 0 8px;
+  background: linear-gradient(135deg, #ffffff 20%, #6db0ff 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-slogan {
+  font-size: 11px;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  margin: 0 0 28px;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,.65);
+  line-height: 1.75;
+  max-width: 320px;
+  margin: 0 0 32px;
+}
+
+.hero-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.hero-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,.7);
+
+  .material-icons {
+    font-size: 18px;
+    color: #4da3ff;
+  }
+}
+
+.hero-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  &__label { font-size: 12px; color: rgba(255,255,255,.4); }
+}
+
+.boton-outline {
+  padding: 10px 28px;
+  border: 1.5px solid rgba(31,111,235,.55);
+  border-radius: 8px;
+  background: transparent;
+  color: #6db0ff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+
+  &:hover {
+    background: rgba(31,111,235,.18);
+    border-color: #1f6feb;
+    color: #fff;
+  }
+}
+
+/* ── Planes ────────────────────────────────────── */
+.planes-titulo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 30px;
+  font-style: italic;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 10px;
+}
+
+.planes-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,.5);
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.planes-lista {
+  display: flex;
+  gap: 12px;
   width: 100%;
-  max-width: 380px;
+  max-width: 460px;
+  margin-bottom: 28px;
+}
+
+.plan-card {
+  flex: 1;
+  position: relative;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px;
+  padding: 20px 12px 16px;
+  text-align: center;
+  transition: transform .2s, box-shadow .2s;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  &--destacado {
+    background: rgba(31,111,235,.18);
+    border-color: rgba(31,111,235,.5);
+    box-shadow: 0 0 20px rgba(31,111,235,.2);
+  }
+
+  &__icono  { font-size: 26px; margin-bottom: 6px; }
+  &__nombre { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  &__precio { font-size: 17px; font-weight: 700; color: #6db0ff; margin-bottom: 12px; }
+
+  &__features {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10.5px;
+      color: rgba(255,255,255,.6);
+
+      .material-icons { font-size: 12px; color: #3fb950; flex-shrink: 0; }
+    }
+  }
+}
+
+.plan-badge {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f6feb;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 12px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.enlace-volver {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.4);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  transition: color .15s;
+
+  &:hover { color: rgba(255,255,255,.8); }
+}
+
+/* ── Panel formulario (derecha) ──────────────── */
+.form-panel {
+  width: 400px;
+  flex-shrink: 0;
   background: var(--superficie);
-  border: 1px solid var(--borde);
-  border-radius: calc(var(--radio) * 2);
-  padding: 40px 32px;
-  box-shadow: var(--sombra);
+  border-left: 1px solid var(--borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+}
 
-  &__logo {
-    text-align: center;
-    margin-bottom: 32px;
+.formulario-wrap {
+  width: 100%;
+  transition: opacity .35s ease, transform .35s ease;
 
-    .material-icons { font-size: 48px; color: var(--primario); display: block; margin-bottom: 8px; }
-    h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-    p  { color: var(--texto-2); font-size: 13px; }
+  &--oculto {
+    position: absolute;
+    top: 50%;
+    left: 40px;
+    width: calc(100% - 80px);
+    transform: translateY(-40%);
+    opacity: 0;
+    pointer-events: none;
   }
+}
 
-  &__form  { display: flex; flex-direction: column; gap: 16px; }
+.form-header {
+  margin-bottom: 28px;
 
-  &__error {
-    background: rgba(248, 81, 73, .15);
-    border: 1px solid var(--peligro);
-    color: var(--peligro);
-    padding: 10px 12px;
-    border-radius: var(--radio);
-    font-size: 13px;
-  }
+  h2 { font-size: 22px; font-weight: 700; color: var(--texto); margin: 0 0 4px; }
+  p  { font-size: 13px; color: var(--texto-2); margin: 0; }
+}
 
-  &__btn { width: 100%; justify-content: center; padding: 12px; margin-top: 4px; }
+.form-body { display: flex; flex-direction: column; gap: 16px; }
+
+.form-error {
+  background: rgba(248,81,73,.12);
+  border: 1px solid var(--peligro);
+  color: var(--peligro);
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.form-alterno {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.enlace {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primario);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+
+  &:hover { color: var(--primario-hover); }
+}
+
+.boton-primario {
+  width: 100%;
+  padding: 12px;
+  background: var(--primario);
+  color: #fff;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+
+  &:hover:not(:disabled) { background: var(--primario-hover); }
+  &:disabled             { opacity: .5; cursor: not-allowed; }
 }
 
 .campo {
@@ -55,8 +349,9 @@
     font-size: 14px;
     outline: none;
     transition: border-color .15s;
+    font-family: inherit;
 
-    &:focus { border-color: var(--primario); }
-    &::placeholder { color: var(--texto-2); opacity: .6; }
+    &:focus          { border-color: var(--primario); }
+    &::placeholder   { color: var(--texto-2); opacity: .6; }
   }
 }

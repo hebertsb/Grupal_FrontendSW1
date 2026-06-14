@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { entorno } from '../../../environments/environment';
-import { CredencialesLogin, SesionUsuario, Usuario } from '../modelos/usuario.modelo';
+import { CredencialesLogin, DatosRegistro, SesionUsuario, Usuario } from '../modelos/usuario.modelo';
 
 const CLAVE_TOKEN   = 'sivic_token';
 const CLAVE_USUARIO = 'sivic_usuario';
@@ -16,6 +16,16 @@ export class AutenticacionServicio {
 
   iniciarSesion(credenciales: CredencialesLogin) {
     return this.http.post<SesionUsuario>(`${entorno.apiUrl}/auth/login/`, credenciales).pipe(
+      tap(sesion => {
+        localStorage.setItem(CLAVE_TOKEN, sesion.access);
+        localStorage.setItem(CLAVE_USUARIO, JSON.stringify(sesion.usuario));
+        this.usuarioActual.set(sesion.usuario);
+      })
+    );
+  }
+
+  registrar(datos: DatosRegistro) {
+    return this.http.post<SesionUsuario>(`${entorno.apiUrl}/auth/registro/`, datos).pipe(
       tap(sesion => {
         localStorage.setItem(CLAVE_TOKEN, sesion.access);
         localStorage.setItem(CLAVE_USUARIO, JSON.stringify(sesion.usuario));

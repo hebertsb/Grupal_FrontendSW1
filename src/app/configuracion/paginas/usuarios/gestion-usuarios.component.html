@@ -2,25 +2,42 @@
   <app-cabecera>
     <span class="material-icons" style="vertical-align:middle;margin-right:6px">manage_accounts</span>
     Usuarios del sistema
+    <button class="boton-primario boton-nuevo" (click)="abrirCrear()">
+      <span class="material-icons">person_add</span>
+      Nuevo guardia
+    </button>
   </app-cabecera>
 
   <div class="pagina-contenido">
     @if (cargando()) {
       <p class="texto-2">Cargando usuarios…</p>
+    } @else if (usuarios().length === 0) {
+      <div class="estado-vacio">
+        <span class="material-icons">group_off</span>
+        <p>Sin usuarios registrados</p>
+      </div>
     } @else {
       <table class="tabla-simple">
         <thead>
-          <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th></tr>
+          <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th><th></th></tr>
         </thead>
         <tbody>
           @for (u of usuarios(); track u.usuario_id) {
             <tr>
               <td>{{ u.nombre }}</td>
               <td class="texto-2">{{ u.email }}</td>
+              <td><span class="rol-chip" [class.rol-chip--admin]="u.rol === 'admin'">{{ u.rol }}</span></td>
+              <td class="texto-2">{{ u.created_at ? u.created_at.substring(0, 10) : '—' }}</td>
               <td>
-                <span class="rol-chip" [class.rol-chip--admin]="u.rol === 'admin'">{{ u.rol }}</span>
+                <div class="fila-acciones">
+                  <button class="boton-icono" title="Editar" (click)="abrirEditar(u)">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button class="boton-icono btn-eliminar" title="Eliminar" (click)="eliminar(u)">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
               </td>
-              <td class="texto-2">{{ u.created_at ?? '—' }}</td>
             </tr>
           }
         </tbody>
@@ -28,3 +45,54 @@
     }
   </div>
 </div>
+
+@if (modalAbierto()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal__cabecera">
+        <h3>{{ editando() ? 'Editar usuario' : 'Nuevo guardia' }}</h3>
+        <button class="boton-icono" (click)="cerrarModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      @if (error()) {
+        <div class="modal__error">{{ error() }}</div>
+      }
+
+      <div class="modal__cuerpo">
+        <div class="campo">
+          <label class="campo__etiqueta">Nombre completo</label>
+          <input class="campo__entrada" [(ngModel)]="form.nombre" placeholder="Juan Pérez" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta">Correo electrónico</label>
+          <input class="campo__entrada" type="email" [(ngModel)]="form.email" placeholder="juan@sivic.com" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta">
+            {{ editando() ? 'Nueva contraseña (vacío = sin cambio)' : 'Contraseña' }}
+          </label>
+          <input class="campo__entrada" type="password" [(ngModel)]="form.password"
+                 [placeholder]="editando() ? '••••••••' : 'Mínimo 8 caracteres'" />
+        </div>
+        <div class="campo">
+          <label class="campo__etiqueta">Rol</label>
+          <select class="campo__entrada" [(ngModel)]="form.rol">
+            <option value="guardia">Guardia</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal__pie">
+        <button class="boton-cancelar" (click)="cerrarModal()">Cancelar</button>
+        <button class="boton-primario" (click)="guardar()" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

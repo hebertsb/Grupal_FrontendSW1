@@ -5,13 +5,12 @@ import { entorno } from '../../../../environments/environment';
 import { CabeceraComponent } from '../../../compartido/componentes/cabecera/cabecera.component';
 
 interface LogAuditoria {
-  log_id:     number;
-  usuario_id: number;
-  accion:     string;
-  tabla:      string;
-  registro_id?: number;
-  detalle?:   string;
-  created_at: string;
+  log_id:           number;
+  usuario:          number;
+  usuario_nombre:   string | null;
+  accion:           string;
+  tabla_afectada:   string;
+  timestamp_accion: string;
 }
 
 @Component({
@@ -28,7 +27,7 @@ export class LogsAuditoriaComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
-    this.http.get<LogAuditoria[]>(`${entorno.apiUrl}/auditoria/`).subscribe({
+    this.http.get<LogAuditoria[]>(`${entorno.apiUrl}/auditoria/logs/`).subscribe({
       next:  lista => { this.logs.set(lista); this.cargando.set(false); },
       error: ()    => this.cargando.set(false),
     });

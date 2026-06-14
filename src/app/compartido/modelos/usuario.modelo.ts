@@ -17,3 +17,10 @@ export interface CredencialesLogin {
   email: string;
   password: string;
 }
+
+export interface DatosRegistro {
+  nombre:   string;
+  email:    string;
+  password: string;
+  rol:      RolUsuario;
+}
