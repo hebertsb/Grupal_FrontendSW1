@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CamarasServicio } from '../../../compartido/servicios/camaras.servicio';
+import { CamarasServicio, ZonaRoi } from '../../../compartido/servicios/camaras.servicio';
 import { IaServicio } from '../../../compartido/servicios/ia.servicio';
 import { AutenticacionServicio } from '../../../compartido/servicios/autenticacion.servicio';
 import { Camara } from '../../../compartido/modelos/camara.modelo';
@@ -175,6 +175,70 @@ export class GestionCamarasComponent implements OnInit {
       next:  r => { this.resultadoForm.set({ ok: r.ok,    msg: r.mensaje }); this.probandoForm.set(false); },
       error: () => { this.resultadoForm.set({ ok: false, msg: 'Error de red' }); this.probandoForm.set(false); },
     });
+  }
+
+  // ── Gestión Zonas ROI ────────────────────────────────────────────────────
+  readonly zonaModalOpen   = signal(false);
+  readonly zonasCamara     = signal<ZonaRoi[]>([]);
+  readonly camaraZonasId   = signal<number | null>(null);
+  readonly guardandoZona   = signal(false);
+
+  readonly TIPOS_ZONA = [
+    { value: 'zona_prohibida',      label: 'Zona Prohibida' },
+    { value: 'horario_restringido', label: 'Horario Restringido (piscina/quinchos)' },
+    { value: 'perimetro',           label: 'Perímetro del condominio' },
+    { value: 'parqueo',             label: 'Parqueo' },
+    { value: 'area_comun',          label: 'Área Común' },
+  ];
+
+  formZona = { tipo_zona: 'zona_prohibida', coordenadas: '[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]]' };
+  errorZona = signal('');
+
+  abrirZonas(cam: Camara) {
+    this.camaraZonasId.set(cam.camara_id);
+    this.zonaModalOpen.set(true);
+    this.cargarZonas(cam.camara_id);
+  }
+
+  cargarZonas(camaraId: number) {
+    this.srv.listarZonas(camaraId).subscribe({
+      next: z => this.zonasCamara.set(z),
+      error: () => this.zonasCamara.set([]),
+    });
+  }
+
+  guardarZona() {
+    let puntos: number[][];
+    try {
+      puntos = JSON.parse(this.formZona.coordenadas);
+      if (!Array.isArray(puntos) || puntos.length < 3) throw new Error();
+    } catch {
+      this.errorZona.set('Coordenadas inválidas. Formato: [[x,y],[x,y],[x,y],...]');
+      return;
+    }
+    this.errorZona.set('');
+    this.guardandoZona.set(true);
+    this.srv.crearZona({
+      camara: this.camaraZonasId()!,
+      tipo_zona: this.formZona.tipo_zona,
+      poligono_coordenadas: puntos,
+    }).subscribe({
+      next: () => {
+        this.guardandoZona.set(false);
+        this.formZona = { tipo_zona: 'zona_prohibida', coordenadas: '[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]]' };
+        this.cargarZonas(this.camaraZonasId()!);
+      },
+      error: () => { this.guardandoZona.set(false); this.errorZona.set('Error al guardar zona'); },
+    });
+  }
+
+  eliminarZona(roiId: number) {
+    if (!confirm('¿Eliminar esta zona?')) return;
+    this.srv.eliminarZona(roiId).subscribe(() => this.cargarZonas(this.camaraZonasId()!));
+  }
+
+  labelTipo(tipo: string): string {
+    return this.TIPOS_ZONA.find(t => t.value === tipo)?.label ?? tipo;
   }
 
   private setEstado(id: number, estado: EstadoConexion, msg: string) {

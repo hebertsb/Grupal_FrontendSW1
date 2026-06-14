@@ -245,5 +245,22 @@
 
 .texto-2 { color: var(--texto-2); }
 
+/* ── Zonas ROI ── */
+.modal--zonas { max-width: 500px; }
+
+.zonas-lista {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 160px; overflow-y: auto;
+}
+
+.zona-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  border-radius: 8px; padding: 8px 10px; font-size: 13px;
+
+  &__tipo  { font-weight: 600; color: var(--texto); }
+  &__puntos { font-size: 11px; }
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { display: inline-block; animation: spin 1.2s linear infinite; }

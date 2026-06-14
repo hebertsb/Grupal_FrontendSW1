@@ -83,6 +83,9 @@
               <button class="btn-icono" title="Editar" (click)="abrirEditar(cam)">
                 <span class="material-icons">edit</span>
               </button>
+              <button class="btn-icono" title="Zonas ROI" (click)="abrirZonas(cam)" style="color:var(--primario)">
+                <span class="material-icons">crop_free</span>
+              </button>
               <button class="btn-icono" [title]="cam.is_active ? 'Desactivar' : 'Activar'"
                       (click)="alternarActiva(cam)">
                 <span class="material-icons">{{ cam.is_active ? 'pause_circle' : 'play_circle' }}</span>
@@ -99,6 +102,76 @@
 
   </div>
 </div>
+
+<!-- ── Modal Zonas ROI ── -->
+@if (zonaModalOpen()) {
+  <div class="modal-fondo" (click)="zonaModalOpen.set(false)">
+    <div class="modal modal--zonas" (click)="$event.stopPropagation()">
+      <h3 class="modal__titulo">
+        <span class="material-icons">crop_free</span>
+        Zonas ROI — Cámara #{{ camaraZonasId() }}
+      </h3>
+
+      <!-- Lista zonas existentes -->
+      <div class="zonas-lista">
+        @if (zonasCamara().length === 0) {
+          <p class="texto-2" style="font-size:13px">Sin zonas definidas</p>
+        }
+        @for (z of zonasCamara(); track z.roi_id) {
+          <div class="zona-item">
+            <span class="material-icons" style="color:var(--primario);font-size:16px">pentagon</span>
+            <span class="zona-item__tipo">{{ labelTipo(z.tipo_zona) }}</span>
+            <span class="texto-2 zona-item__puntos">{{ z.poligono_coordenadas.length }} puntos</span>
+            <button class="btn-icono btn-icono--rojo" style="margin-left:auto"
+                    title="Eliminar zona" (click)="eliminarZona(z.roi_id!)">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        }
+      </div>
+
+      <hr style="border-color:var(--borde);margin:14px 0">
+
+      <!-- Agregar zona -->
+      <p style="font-size:12px;font-weight:700;margin-bottom:8px">Agregar zona</p>
+
+      <div class="campo">
+        <label class="campo__etiqueta">Tipo de zona</label>
+        <select class="campo__entrada" [(ngModel)]="formZona.tipo_zona">
+          @for (t of TIPOS_ZONA; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label class="campo__etiqueta">Coordenadas (JSON normalizadas 0.0–1.0)</label>
+        <textarea class="campo__entrada" rows="3" [(ngModel)]="formZona.coordenadas"
+                  style="font-family:monospace;font-size:12px"
+                  placeholder='[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]]'></textarea>
+        <span class="campo__hint texto-2">
+          Cada punto [x, y] relativo al ancho/alto de la imagen (0=izquierda/arriba, 1=derecha/abajo).
+          Mínimo 3 puntos. Ej. zona completa: [[0.0,0.0],[1.0,0.0],[1.0,1.0],[0.0,1.0]]
+        </span>
+      </div>
+
+      @if (errorZona()) {
+        <div style="color:var(--peligro);font-size:12px;margin-bottom:8px">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle">error</span>
+          {{ errorZona() }}
+        </div>
+      }
+
+      <div class="modal__acciones">
+        <button class="boton-primario" (click)="guardarZona()" [disabled]="guardandoZona()">
+          <span class="material-icons">add</span>
+          {{ guardandoZona() ? 'Guardando…' : 'Agregar zona' }}
+        </button>
+        <button class="boton-secundario" (click)="zonaModalOpen.set(false)">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ── Modal crear / editar ── -->
 @if (modalOpen()) {
