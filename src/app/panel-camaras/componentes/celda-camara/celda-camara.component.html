@@ -37,19 +37,27 @@
          (error)="alError()"
          alt="CAM {{ camara.camara_id }}" />
 
-    <!-- Overlay SVG bboxes sobre stream en vivo -->
+    <!-- Overlay SVG: solo dot + etiqueta sobre cada persona detectada -->
     @if (detecciones().length > 0) {
       <svg class="celda__detecciones" viewBox="0 0 100 100" preserveAspectRatio="none">
         @for (d of detecciones(); track $index) {
-          <rect [attr.x]="d.bbox.x * 100" [attr.y]="d.bbox.y * 100"
-                [attr.width]="d.bbox.w * 100" [attr.height]="d.bbox.h * 100"
-                [attr.stroke]="colorClase(d.clase)" fill="none" stroke-width="0.6" rx="0.4" />
-          <rect [attr.x]="d.bbox.x * 100" [attr.y]="d.bbox.y * 100 - 4"
-                [attr.width]="(d.clase.length + 5) * 1.5" height="4"
-                [attr.fill]="colorClase(d.clase)" opacity="0.85" />
-          <text [attr.x]="d.bbox.x * 100 + 0.4" [attr.y]="d.bbox.y * 100 - 1"
-                fill="white" font-size="3" font-family="monospace" font-weight="bold">
-            {{ d.clase }} {{ (d.confianza * 100).toFixed(0) }}%
+          <!-- Dot en cabeza (centro-superior del bbox) -->
+          <circle [attr.cx]="(d.bbox.x + d.bbox.w / 2) * 100"
+                  [attr.cy]="d.bbox.y * 100 + 2"
+                  r="1.8"
+                  [attr.fill]="colorClase(d.clase)"
+                  opacity="0.95" />
+          <!-- Chip etiqueta -->
+          <rect [attr.x]="(d.bbox.x + d.bbox.w / 2) * 100 - 7"
+                [attr.y]="d.bbox.y * 100 + 4.5"
+                width="14" height="4.5"
+                [attr.fill]="colorClase(d.clase)"
+                rx="1.2" opacity="0.82" />
+          <text [attr.x]="(d.bbox.x + d.bbox.w / 2) * 100"
+                [attr.y]="d.bbox.y * 100 + 8"
+                fill="white" font-size="2.8" font-family="sans-serif" font-weight="700"
+                text-anchor="middle">
+            {{ (d.confianza * 100).toFixed(0) }}%
           </text>
         }
       </svg>
@@ -91,34 +99,25 @@
       <img class="celda__media" [src]="archivoUrl()!" alt="Imagen IA" />
     }
 
-    <!-- Overlay SVG con bounding boxes de detecciones -->
+    <!-- Overlay SVG: solo dot + etiqueta sobre cada detección -->
     @if (detecciones().length > 0) {
       <svg class="celda__detecciones" viewBox="0 0 100 100" preserveAspectRatio="none">
         @for (d of detecciones(); track $index) {
-          <!-- Rectángulo bbox -->
-          <rect [attr.x]="d.bbox.x * 100"
-                [attr.y]="d.bbox.y * 100"
-                [attr.width]="d.bbox.w * 100"
-                [attr.height]="d.bbox.h * 100"
-                [attr.stroke]="colorClase(d.clase)"
-                fill="none"
-                stroke-width="0.6"
-                rx="0.4" />
-          <!-- Etiqueta fondo -->
-          <rect [attr.x]="d.bbox.x * 100"
-                [attr.y]="d.bbox.y * 100 - 4"
-                [attr.width]="(d.clase.length + 5) * 1.5"
-                height="4"
+          <circle [attr.cx]="(d.bbox.x + d.bbox.w / 2) * 100"
+                  [attr.cy]="d.bbox.y * 100 + 2"
+                  r="1.8"
+                  [attr.fill]="colorClase(d.clase)"
+                  opacity="0.95" />
+          <rect [attr.x]="(d.bbox.x + d.bbox.w / 2) * 100 - 7"
+                [attr.y]="d.bbox.y * 100 + 4.5"
+                width="14" height="4.5"
                 [attr.fill]="colorClase(d.clase)"
-                opacity="0.85" />
-          <!-- Texto etiqueta -->
-          <text [attr.x]="d.bbox.x * 100 + 0.4"
-                [attr.y]="d.bbox.y * 100 - 1"
-                fill="white"
-                font-size="3"
-                font-family="monospace"
-                font-weight="bold">
-            {{ d.clase }} {{ (d.confianza * 100).toFixed(0) }}%
+                rx="1.2" opacity="0.82" />
+          <text [attr.x]="(d.bbox.x + d.bbox.w / 2) * 100"
+                [attr.y]="d.bbox.y * 100 + 8"
+                fill="white" font-size="2.8" font-family="sans-serif" font-weight="700"
+                text-anchor="middle">
+            {{ (d.confianza * 100).toFixed(0) }}%
           </text>
         }
       </svg>
