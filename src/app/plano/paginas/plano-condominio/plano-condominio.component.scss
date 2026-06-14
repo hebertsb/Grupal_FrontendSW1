@@ -12,22 +12,13 @@
 
 .upload-zone {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 
   &__card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
     background: var(--color-superficie, #1e1e2e);
-    border: 2px dashed rgba(255,255,255,0.14);
-    border-radius: 18px;
-    padding: 52px 44px;
-    max-width: 460px;
-    text-align: center;
-
+    border: 2px dashed rgba(255,255,255,.14);
+    border-radius: 18px; padding: 52px 44px; max-width: 460px; text-align: center;
     h2 { margin: 0; font-size: 1.25rem; }
     p  { margin: 0; color: var(--color-texto-sec, #aaa); font-size: .9rem; }
   }
@@ -35,8 +26,7 @@
   &__icono { font-size: 60px; color: var(--color-primario, #6366f1); opacity: .65; }
 
   &__campo {
-    width: 100%;
-    text-align: left;
+    width: 100%; text-align: left;
     label { display: block; font-size: .8rem; color: var(--color-texto-sec, #aaa); margin-bottom: 4px; }
     input {
       width: 100%; box-sizing: border-box;
@@ -49,13 +39,13 @@
 .btn-upload {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 26px; background: var(--color-primario, #6366f1);
-  color: #fff; border-radius: 8px; cursor: pointer;
-  font-size: .9rem; transition: opacity .15s;
+  color: #fff; border-radius: 8px; cursor: pointer; font-size: .9rem;
+  transition: opacity .15s;
   &--cargando { opacity: .65; pointer-events: none; }
   &:hover { opacity: .83; }
 }
 
-// ── Layout principal ─────────────────────────────────────────────────────────
+// ── Layout ───────────────────────────────────────────────────────────────────
 
 .plano-layout {
   flex: 1;
@@ -69,21 +59,14 @@
 // ── Panel mapa ───────────────────────────────────────────────────────────────
 
 .plano-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow: hidden;
-  min-height: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow: hidden; min-height: 0;
 }
 
 .plano-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
   background: var(--color-superficie, #1e1e2e);
-  padding: 7px 12px;
-  border-radius: 10px;
-  flex-shrink: 0;
+  padding: 7px 12px; border-radius: 10px;
 
   &__nombre { font-weight: 600; font-size: .9rem; white-space: nowrap; }
   &__acciones { display: flex; gap: 3px; margin-left: auto; }
@@ -91,15 +74,13 @@
 
 .toolbar-sep {
   width: 1px; height: 22px;
-  background: rgba(255,255,255,.12);
-  margin: 0 3px;
+  background: rgba(255,255,255,.12); margin: 0 3px;
 }
 
 .hint {
   display: flex; align-items: center; gap: 6px;
-  padding: 5px 10px; border-radius: 7px; font-size: .8rem;
-  white-space: nowrap;
-  .material-icons { font-size: 16px; }
+  padding: 4px 10px; border-radius: 7px; font-size: .78rem; white-space: nowrap;
+  .material-icons { font-size: 15px; }
   &--place  { background: rgba(99,102,241,.2);  color: #a5b4fc; }
   &--remove { background: rgba(239,83,80,.2);   color: #ff8a80; }
 }
@@ -108,10 +89,10 @@
   display: inline-flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; background: rgba(255,255,255,.06);
   border: none; border-radius: 7px; cursor: pointer; color: inherit;
-  transition: background .15s; flex-shrink: 0;
+  transition: background .14s; flex-shrink: 0;
   .material-icons { font-size: 18px; }
-  &:hover { background: rgba(255,255,255,.13); }
-  &.activo { background: var(--color-primario, #6366f1); }
+  &:hover         { background: rgba(255,255,255,.13); }
+  &.activo        { background: var(--color-primario, #6366f1); }
   &--danger:hover { background: rgba(229,57,53,.22); color: #ef5350; }
 }
 
@@ -122,18 +103,21 @@
   flex: 1;
   overflow: hidden;
   border-radius: 12px;
-  background: #0b0b0f;
+  background: #0a0a10;
   cursor: grab;
   user-select: none;
   min-height: 0;
 
   &.cursor-crosshair { cursor: crosshair; }
-  &.cursor-grabbing  { cursor: grabbing; }
+  &.cursor-grabbing  { cursor: grabbing !important; }
 }
 
+// Inner wrapper: OCUPA EL 100% DEL CONTENEDOR por CSS
+// El JS aplica transform para zoom/pan
 .plano-inner {
   position: absolute;
   top: 0; left: 0;
+  width: 100%;          // ← image fills container width initially
   transform-origin: 0 0;
   will-change: transform;
 }
@@ -143,8 +127,8 @@
   width: 100%;
   height: auto;
   user-select: none;
-  -webkit-user-drag: none;
   pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .plano-svg {
@@ -155,113 +139,64 @@
   overflow: visible;
 }
 
-.plano-hint-drag {
-  margin: 0;
-  font-size: .75rem;
-  color: var(--color-texto-sec, #666);
-  text-align: center;
-  flex-shrink: 0;
-}
-
 // ── Panel cámaras ─────────────────────────────────────────────────────────────
 
 .panel-camaras {
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   background: var(--color-superficie, #1e1e2e);
-  border-radius: 12px;
-  padding: 14px 12px;
-  overflow: hidden;
-  min-height: 0;
+  border-radius: 12px; padding: 14px 12px;
+  overflow: hidden; min-height: 0;
 
   &__titulo {
-    margin: 0 0 4px;
-    font-size: .95rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    margin: 0 0 4px; font-size: .95rem;
+    display: flex; align-items: center; gap: 6px;
   }
-
   &__hint {
-    margin: 0 0 10px;
-    font-size: .75rem;
-    color: var(--color-texto-sec, #888);
-    line-height: 1.4;
+    margin: 0 0 10px; font-size: .74rem;
+    color: var(--color-texto-sec, #888); line-height: 1.4;
   }
-
   &__footer {
-    margin-top: auto;
-    padding-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    margin-top: auto; padding-top: 10px;
     border-top: 1px solid rgba(255,255,255,.07);
+    display: flex; flex-direction: column; gap: 6px;
   }
-
-  &__count {
-    font-size: .74rem;
-    color: var(--color-texto-sec, #888);
-    text-align: center;
-  }
+  &__count { font-size: .73rem; color: var(--color-texto-sec, #888); text-align: center; }
 }
 
 .cam-lista {
-  list-style: none;
-  padding: 0; margin: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  flex: 1;
+  list-style: none; padding: 0; margin: 0;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 5px; flex: 1;
 }
 
 .cam-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  background: rgba(255,255,255,.04);
-  transition: background .14s;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,.04); transition: background .13s;
 
-  &:hover      { background: rgba(255,255,255,.09); }
-  &--selec     { background: rgba(99,102,241,.2) !important; outline: 1px solid rgba(99,102,241,.7); }
-  &--colocada  .cam-nombre { color: #e2e8f0; }
+  &:hover   { background: rgba(255,255,255,.09); }
+  &--selec  { background: rgba(99,102,241,.2) !important; outline: 1px solid rgba(99,102,241,.7); }
+  &--ok .cam-nombre { color: #e2e8f0; }
 }
 
-.cam-pin-preview {
-  width: 24px;
-  height: 28px;
-  flex-shrink: 0;
-  overflow: visible;
+.cam-pin {
+  width: 22px; height: 26px; flex-shrink: 0; overflow: visible;
 }
 
 .cam-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
 }
 
 .cam-nombre {
-  font-size: .86rem;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: .85rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .cam-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: .68rem;
-  border-radius: 4px;
-  padding: 1px 5px;
-  &--ok  { background: rgba(76,175,80,.18); color: #81c784; }
-  &--sin { background: rgba(255,255,255,.06); color: #888; }
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: .67rem; border-radius: 4px; padding: 1px 5px;
+  background: rgba(255,255,255,.06); color: #888;
+  &--ok { background: rgba(76,175,80,.18); color: #81c784; }
 }
 
 .btn-quitar {
@@ -269,28 +204,26 @@
   width: 22px; height: 22px;
   border: none; border-radius: 50%;
   background: rgba(239,83,80,.18); color: #ef5350;
-  cursor: pointer; flex-shrink: 0; transition: background .14s;
+  cursor: pointer; flex-shrink: 0; transition: background .13s;
   &:hover { background: rgba(239,83,80,.35); }
   .material-icons { font-size: 13px; }
 }
 
 .btn-guardar {
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 10px;
-  background: var(--color-primario, #6366f1);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px; background: var(--color-primario, #6366f1);
   color: #fff; border: none; border-radius: 8px;
-  cursor: pointer; font-size: .9rem; transition: opacity .15s, background .2s;
-  &:disabled { opacity: .45; cursor: not-allowed; }
-  &:not(:disabled):hover { opacity: .84; }
+  cursor: pointer; font-size: .9rem; transition: opacity .14s;
+  &:disabled    { opacity: .4; cursor: not-allowed; }
+  &:not(:disabled):hover { opacity: .83; }
 }
 
-// ── Compartido ─────────────────────────────────────────────────────────────
+// ── Misc ─────────────────────────────────────────────────────────────────────
 
 .estado-center {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  flex: 1; gap: 12px;
-  color: var(--color-texto-sec, #888);
+  flex: 1; gap: 12px; color: var(--color-texto-sec, #888);
   .material-icons { font-size: 40px; }
 }
 

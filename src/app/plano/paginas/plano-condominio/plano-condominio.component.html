@@ -1,62 +1,49 @@
-<app-cabecera titulo="Plano del Condominio" subtitulo="Haz zoom y posiciona las cámaras sobre el plano" />
+<app-cabecera titulo="Plano del Condominio" subtitulo="Rueda para zoom · Arrastrar para mover · Click para colocar cámara" />
 
 <div class="plano-page">
 
-  <!-- ── Sin plano: zona de subida ── -->
   @if (!cargando() && !plano()) {
     <div class="upload-zone">
       <div class="upload-zone__card">
         <span class="material-icons upload-zone__icono">map</span>
         <h2>Sin plano cargado</h2>
         <p>Sube una imagen del plano de tu condominio (JPG, JPEG o PNG)</p>
-
         <div class="upload-zone__campo">
           <label>Nombre del plano</label>
           <input type="text" [value]="nombrePlano()"
                  (input)="nombrePlano.set($any($event.target).value)"
                  placeholder="Plano Principal" />
         </div>
-
         <label class="btn-upload" [class.btn-upload--cargando]="subiendo()">
-          @if (subiendo()) {
-            <span class="material-icons spin">sync</span> Subiendo…
-          } @else {
-            <span class="material-icons">upload_file</span> Seleccionar imagen
-          }
+          @if (subiendo()) { <span class="material-icons spin">sync</span> Subiendo… }
+          @else { <span class="material-icons">upload_file</span> Seleccionar imagen }
           <input type="file" accept=".jpg,.jpeg,.png" (change)="onFileSelect($event)" style="display:none" />
         </label>
-
-        @if (errorMsg()) {
-          <p class="error-msg">{{ errorMsg() }}</p>
-        }
+        @if (errorMsg()) { <p class="error-msg">{{ errorMsg() }}</p> }
       </div>
     </div>
   }
 
-  <!-- ── Cargando ── -->
   @if (cargando()) {
     <div class="estado-center">
-      <span class="material-icons spin">sync</span>
-      <span>Cargando plano…</span>
+      <span class="material-icons spin">sync</span><span>Cargando…</span>
     </div>
   }
 
-  <!-- ── Plano cargado ── -->
   @if (!cargando() && plano()) {
     <div class="plano-layout">
 
-      <!-- ── Panel izquierdo: mapa ── -->
+      <!-- ── Mapa ── -->
       <div class="plano-wrap">
 
         <!-- Toolbar -->
         <div class="plano-toolbar">
           <span class="plano-toolbar__nombre">{{ plano()!.nombre }}</span>
 
-          <!-- Hint contextual -->
           @if (camaraSelec()) {
             <div class="hint hint--place">
               <span class="material-icons">touch_app</span>
-              Haz clic en el plano para colocar <strong>{{ camaraSelec()!.nombre_ubicacion }}</strong>
+              Clic en el plano → colocar <strong>{{ camaraSelec()!.nombre_ubicacion }}</strong>
             </div>
           }
           @if (modoEliminar()) {
@@ -67,93 +54,73 @@
           }
 
           <div class="plano-toolbar__acciones">
-            <!-- Zoom controls -->
-            <button class="btn-icon" (click)="zoomIn()"          title="Acercar">
+            <button class="btn-icon" (click)="zoomIn()"         title="Acercar">
               <span class="material-icons">add</span>
             </button>
-            <button class="btn-icon" (click)="zoomOut()"         title="Alejar">
+            <button class="btn-icon" (click)="zoomOut()"        title="Alejar">
               <span class="material-icons">remove</span>
             </button>
-            <button class="btn-icon" (click)="fitToContainer()"  title="Ajustar a pantalla">
+            <button class="btn-icon" (click)="fitToContainer()" title="Ajustar a pantalla">
               <span class="material-icons">fit_screen</span>
             </button>
             <div class="toolbar-sep"></div>
-            <!-- Modo quitar -->
-            <button class="btn-icon" [class.activo]="modoEliminar()" (click)="toggleModoEliminar()" title="Quitar cámara del plano">
+            <button class="btn-icon" [class.activo]="modoEliminar()" (click)="toggleModoEliminar()" title="Quitar pin">
               <span class="material-icons">remove_circle_outline</span>
             </button>
-            <!-- Reemplazar imagen -->
-            <label class="btn-icon" title="Reemplazar imagen del plano">
+            <label class="btn-icon" title="Reemplazar imagen">
               <span class="material-icons">upload</span>
               <input type="file" accept=".jpg,.jpeg,.png" (change)="onFileSelect($event)" style="display:none" />
             </label>
-            <!-- Eliminar plano -->
             <button class="btn-icon btn-icon--danger" (click)="eliminarPlano()" title="Eliminar plano">
               <span class="material-icons">delete_outline</span>
             </button>
           </div>
         </div>
 
-        <!-- Contenedor del mapa (zoom/pan) -->
+        <!-- Contenedor zoom/pan -->
         <div class="plano-container"
              #containerRef
              [class.cursor-crosshair]="!!camaraSelec() || modoEliminar()"
-             [class.cursor-grabbing]="_dragging"
+             [class.cursor-grabbing]="isDragging"
              (mousedown)="onMouseDown($event)">
 
-          <!-- Inner wrapper: recibe el CSS transform -->
+          <!-- Inner wrapper: recibe el transform CSS -->
           <div class="plano-inner" #innerWrapper>
-            <img #imgPlano
-                 class="plano-img"
+            <img class="plano-img"
                  [src]="plano()!.imagen_url"
-                 alt="Plano del condominio"
+                 alt="Plano"
                  (load)="onImageLoad()"
                  draggable="false" />
 
-            <!-- SVG overlay: coordenadas en viewBox 0-100 -->
-            <svg class="plano-svg"
-                 viewBox="0 0 100 100"
-                 preserveAspectRatio="none">
-
-              @for (pos of posiciones(); track pos.camaraId; let i = $index) {
-                <!-- Grupo pin: punto anclado al pos almacenado (pin tip abajo) -->
+            <!-- SVG overlay: viewBox 0-100 mapeado al tamaño real de imagen -->
+            <svg class="plano-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+              @for (pos of posiciones(); track pos.camaraId) {
                 <g [attr.transform]="'translate(' + svgX(pos.pos_x) + ',' + svgY(pos.pos_y) + ')'">
-
-                  <!-- Sombra del pin -->
-                  <ellipse cx="0.5" cy="1.5" rx="4.5" ry="1.5"
-                           fill="rgba(0,0,0,0.35)" />
-
-                  <!-- Cola del pin (triángulo hacia abajo) -->
-                  <polygon points="-2.8,-3 2.8,-3 0,1.5"
+                  <!-- Sombra -->
+                  <ellipse cx="0.6" cy="1.8" rx="4.5" ry="1.5" fill="rgba(0,0,0,0.3)" />
+                  <!-- Cola triángulo -->
+                  <polygon points="-2.8,-3.5 2.8,-3.5 0,1.5"
                            [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))" />
-
-                  <!-- Cuerpo circular del pin -->
-                  <circle cx="0" cy="-9" r="7"
+                  <!-- Círculo del pin -->
+                  <circle cx="0" cy="-10" r="7.5"
                           [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))"
-                          stroke="white" stroke-width="0.8" />
-
-                  <!-- Ícono cámara (blanco) dentro del círculo -->
-                  <!-- Cuerpo de la cámara -->
-                  <rect x="-4" y="-12.5" width="8" height="5.5" rx="1"
-                        fill="white" />
-                  <!-- Visor superior -->
-                  <rect x="-1.8" y="-14.5" width="3.6" height="2.5" rx="0.7"
-                        fill="white" />
+                          stroke="white" stroke-width="0.9" />
+                  <!-- Cuerpo cámara (blanco) -->
+                  <rect x="-4.2" y="-13.5" width="8.4" height="6" rx="1.1" fill="white"/>
+                  <!-- Visor -->
+                  <rect x="-2" y="-15.8" width="4" height="2.8" rx="0.8" fill="white"/>
                   <!-- Lente -->
-                  <circle cx="0" cy="-9.5" r="2.4"
+                  <circle cx="0" cy="-10.5" r="2.6"
                           [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))" />
-                  <circle cx="0" cy="-9.5" r="1.1"
-                          fill="rgba(0,0,0,0.45)" />
+                  <circle cx="0" cy="-10.5" r="1.1" fill="rgba(0,0,0,0.4)"/>
                   <!-- Flash -->
-                  <circle cx="3.2" cy="-12" r="0.9" fill="white" opacity="0.7" />
-
-                  <!-- Etiqueta nombre -->
-                  <rect x="-12" y="3" width="24" height="5.5" rx="1.3"
+                  <circle cx="3.4" cy="-13" r="1" fill="white" opacity="0.75"/>
+                  <!-- Etiqueta -->
+                  <rect x="-13" y="3.5" width="26" height="6" rx="1.4"
                         [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))"
-                        opacity="0.92" />
-                  <text x="0" y="7.4"
-                        font-size="2.6" font-family="sans-serif" font-weight="700"
-                        text-anchor="middle" fill="white">
+                        opacity="0.92"/>
+                  <text x="0" y="8" font-size="3" font-family="sans-serif"
+                        font-weight="700" text-anchor="middle" fill="white">
                     {{ labelCorto(pos.nombreCamara) }}
                   </text>
                 </g>
@@ -162,58 +129,48 @@
           </div>
         </div>
 
-        @if (errorMsg()) {
-          <p class="error-msg" style="margin-top:6px">{{ errorMsg() }}</p>
-        }
-        <p class="plano-hint-drag">
-          <span class="material-icons" style="font-size:14px;vertical-align:middle">pan_tool</span>
-          Arrastra para mover · Rueda para zoom · Selecciona cámara y haz clic para posicionar
-        </p>
+        @if (errorMsg()) { <p class="error-msg" style="margin-top:5px">{{ errorMsg() }}</p> }
       </div>
 
-      <!-- ── Panel derecho: lista de cámaras ── -->
+      <!-- ── Panel cámaras ── -->
       <aside class="panel-camaras">
         <h3 class="panel-camaras__titulo">
-          <span class="material-icons" style="font-size:18px">videocam</span>
-          Cámaras
+          <span class="material-icons" style="font-size:18px">videocam</span> Cámaras
         </h3>
-        <p class="panel-camaras__hint">
-          Selecciona una → haz clic en el plano para colocarla
-        </p>
+        <p class="panel-camaras__hint">Selecciona una → haz clic en el plano</p>
 
         <ul class="cam-lista">
           @for (cam of camaras(); track cam.camara_id; let i = $index) {
             <li class="cam-item"
                 [class.cam-item--selec]="camaraSelec()?.camara_id === cam.camara_id"
-                [class.cam-item--colocada]="estaColocada(cam.camara_id)"
+                [class.cam-item--ok]="estaColocada(cam.camara_id)"
                 (click)="seleccionarCamara(cam)">
 
-              <!-- Mini pin preview -->
-              <svg class="cam-pin-preview" viewBox="-10 -20 20 24">
-                <polygon points="-2.5,-2.5 2.5,-2.5 0,2.5"
+              <!-- Pin preview miniatura -->
+              <svg class="cam-pin" viewBox="-10 -22 20 28">
+                <polygon points="-2.5,-2 2.5,-2 0,3"
                          [attr.fill]="colorCamara(i)" />
-                <circle cx="0" cy="-9" r="7"
-                        [attr.fill]="colorCamara(i)"
-                        stroke="white" stroke-width="1.2" />
-                <rect x="-3.5" y="-12" width="7" height="5" rx="0.8" fill="white"/>
-                <circle cx="0" cy="-9.5" r="2" [attr.fill]="colorCamara(i)"/>
-                <circle cx="0" cy="-9.5" r="0.9" fill="rgba(0,0,0,0.5)"/>
+                <circle cx="0" cy="-10" r="7"
+                        [attr.fill]="colorCamara(i)" stroke="white" stroke-width="1.2"/>
+                <rect x="-3.5" y="-13.5" width="7" height="5" rx="1" fill="white"/>
+                <circle cx="0" cy="-10.5" r="2" [attr.fill]="colorCamara(i)"/>
+                <circle cx="0" cy="-10.5" r="0.8" fill="rgba(0,0,0,0.5)"/>
               </svg>
 
               <div class="cam-info">
                 <span class="cam-nombre">{{ cam.nombre_ubicacion }}</span>
                 @if (estaColocada(cam.camara_id)) {
                   <span class="cam-badge cam-badge--ok">
-                    <span class="material-icons" style="font-size:11px">place</span> Colocada
+                    <span class="material-icons" style="font-size:10px">place</span> Colocada
                   </span>
                 } @else {
-                  <span class="cam-badge cam-badge--sin">Sin posición</span>
+                  <span class="cam-badge">Sin posición</span>
                 }
               </div>
 
               @if (estaColocada(cam.camara_id)) {
                 <button class="btn-quitar"
-                        (click)="$event.stopPropagation(); _quitar(cam.camara_id)"
+                        (click)="$event.stopPropagation(); quitarCamara(cam.camara_id)"
                         title="Quitar del plano">
                   <span class="material-icons">close</span>
                 </button>
@@ -226,19 +183,16 @@
           <button class="btn-guardar"
                   [disabled]="guardando() || posiciones().length === 0"
                   (click)="guardar()">
-            @if (guardando()) {
-              <span class="material-icons spin">sync</span> Guardando…
-            } @else if (guardadoOk()) {
-              <span class="material-icons">check_circle</span> Guardado
-            } @else {
-              <span class="material-icons">save</span> Guardar posiciones
-            }
+            @if (guardando()) { <span class="material-icons spin">sync</span> Guardando… }
+            @else if (guardadoOk()) { <span class="material-icons">check_circle</span> ¡Guardado! }
+            @else { <span class="material-icons">save</span> Guardar posiciones }
           </button>
           <span class="panel-camaras__count">
-            {{ posiciones().length }} de {{ camaras().length }} colocadas
+            {{ posiciones().length }} / {{ camaras().length }} colocadas
           </span>
         </div>
       </aside>
+
     </div>
   }
 </div>
