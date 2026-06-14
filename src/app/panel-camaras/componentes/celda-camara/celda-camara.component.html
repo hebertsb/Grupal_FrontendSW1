@@ -36,6 +36,52 @@
          (load)="alCargar()"
          (error)="alError()"
          alt="CAM {{ camara.camara_id }}" />
+
+    <!-- Overlay SVG bboxes sobre stream en vivo -->
+    @if (iaVivaActiva() && detecciones().length > 0) {
+      <svg class="celda__detecciones" viewBox="0 0 100 100" preserveAspectRatio="none">
+        @for (d of detecciones(); track $index) {
+          <rect [attr.x]="d.bbox.x * 100" [attr.y]="d.bbox.y * 100"
+                [attr.width]="d.bbox.w * 100" [attr.height]="d.bbox.h * 100"
+                [attr.stroke]="colorClase(d.clase)" fill="none" stroke-width="0.6" rx="0.4" />
+          <rect [attr.x]="d.bbox.x * 100" [attr.y]="d.bbox.y * 100 - 4"
+                [attr.width]="(d.clase.length + 5) * 1.5" height="4"
+                [attr.fill]="colorClase(d.clase)" opacity="0.85" />
+          <text [attr.x]="d.bbox.x * 100 + 0.4" [attr.y]="d.bbox.y * 100 - 1"
+                fill="white" font-size="3" font-family="monospace" font-weight="bold">
+            {{ d.clase }} {{ (d.confianza * 100).toFixed(0) }}%
+          </text>
+        }
+      </svg>
+    }
+
+    <!-- Alertas en vivo -->
+    @if (iaVivaActiva() && alertasModel().length > 0) {
+      <div class="ia-resultado-overlay">
+        @for (alerta of alertasModel(); track alerta) {
+          <div class="ia-resultado-badge ia-resultado-badge--alerta">
+            <span class="material-icons">warning</span>
+            <span>{{ alerta === 'zona_restringida_persona' ? 'Zona Restringida' :
+                     alerta === 'merodeo' ? 'Merodeo' :
+                     alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
+                     alerta === 'personas_peleando' ? 'Pelea Detectada' : alerta }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Botón IA en vivo -->
+    @if (!errorStream() && !cargando()) {
+      <button class="btn-ia-viva" [class.btn-ia-viva--activo]="iaVivaActiva()"
+              (click)="toggleIaViva()" title="Análisis IA en tiempo real">
+        <span class="material-icons">{{ iaVivaActiva() ? 'stop_circle' : 'psychology' }}</span>
+      </button>
+    }
+
+    <!-- Indicador escaneando -->
+    @if (iaVivaActiva() && analizando()) {
+      <div class="ia-scan"><span class="ia-scan__dot"></span> IA</div>
+    }
   }
 
   <!-- ── MODO ARCHIVO: video o imagen local + análisis IA ── -->
