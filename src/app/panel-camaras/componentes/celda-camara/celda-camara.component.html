@@ -64,7 +64,10 @@
             <span>{{ alerta === 'zona_restringida_persona' ? 'Zona Restringida' :
                      alerta === 'merodeo' ? 'Merodeo' :
                      alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
-                     alerta === 'personas_peleando' ? 'Pelea Detectada' : alerta }}</span>
+                     alerta === 'personas_peleando' ? 'Pelea Detectada' :
+                     alerta === 'caida_persona' ? 'Caída de Persona' :
+                     alerta === 'intrusion_nocturna' ? 'Intrusión Nocturna' :
+                     alerta === 'acceso_fuera_horario' ? 'Acceso Fuera de Horario' : alerta }}</span>
           </div>
         }
       </div>
