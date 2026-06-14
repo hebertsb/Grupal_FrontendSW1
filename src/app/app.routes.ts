@@ -61,6 +61,11 @@ export const rutas: Routes = [
         loadComponent: () => import('./auditoria/paginas/logs/logs-auditoria.component').then(m => m.LogsAuditoriaComponent),
         title: 'SIVIC — Auditoría',
       },
+      {
+        path: 'plano',
+        loadComponent: () => import('./plano/paginas/plano-condominio/plano-condominio.component').then(m => m.PlanoCondominioComponent),
+        title: 'SIVIC — Plano del Condominio',
+      },
     ],
   },
   { path: '**', redirectTo: 'camaras' },

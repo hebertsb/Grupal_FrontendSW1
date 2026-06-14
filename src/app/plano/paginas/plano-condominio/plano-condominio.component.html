@@ -1,0 +1,166 @@
+<app-cabecera titulo="Plano del Condominio" subtitulo="Visualiza y posiciona las cámaras sobre el plano" />
+
+<div class="plano-page">
+
+  <!-- ── Sin plano: zona de subida ── -->
+  @if (!cargando() && !plano()) {
+    <div class="upload-zone">
+      <div class="upload-zone__card">
+        <span class="material-icons upload-zone__icono">map</span>
+        <h2>Sin plano cargado</h2>
+        <p>Sube una imagen del plano de tu condominio (JPG, JPEG o PNG)</p>
+
+        <div class="upload-zone__nombre">
+          <label>Nombre del plano</label>
+          <input type="text" [value]="nombrePlano()" (input)="nombrePlano.set($any($event.target).value)" placeholder="Plano Principal" />
+        </div>
+
+        <label class="btn-upload" [class.btn-upload--cargando]="subiendo()">
+          @if (subiendo()) {
+            <span class="material-icons spin">sync</span> Subiendo…
+          } @else {
+            <span class="material-icons">upload_file</span> Seleccionar imagen
+          }
+          <input type="file" accept=".jpg,.jpeg,.png" (change)="onFileSelect($event)" style="display:none" />
+        </label>
+
+        @if (errorMsg()) {
+          <p class="error-msg">{{ errorMsg() }}</p>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── Cargando ── -->
+  @if (cargando()) {
+    <div class="estado-center">
+      <span class="material-icons spin">sync</span>
+      <span>Cargando plano…</span>
+    </div>
+  }
+
+  <!-- ── Plano cargado ── -->
+  @if (!cargando() && plano()) {
+    <div class="plano-layout">
+
+      <!-- ── Panel izquierdo: plano + overlay ── -->
+      <div class="plano-wrap">
+        <div class="plano-toolbar">
+          <span class="plano-toolbar__nombre">{{ plano()!.nombre }}</span>
+          <div class="plano-toolbar__acciones">
+            <button class="btn-icon" [class.activo]="modoEliminar()" (click)="toggleModoEliminar()" title="Modo quitar cámara">
+              <span class="material-icons">{{ modoEliminar() ? 'cancel' : 'remove_circle_outline' }}</span>
+            </button>
+            <button class="btn-icon btn-icon--danger" (click)="eliminarPlano()" title="Eliminar plano">
+              <span class="material-icons">delete_outline</span>
+            </button>
+            <!-- Reemplazar imagen -->
+            <label class="btn-icon" title="Reemplazar imagen">
+              <span class="material-icons">upload</span>
+              <input type="file" accept=".jpg,.jpeg,.png" (change)="onFileSelect($event)" style="display:none" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Instrucción contextual -->
+        @if (camaraSelec()) {
+          <div class="hint hint--place">
+            <span class="material-icons">touch_app</span>
+            Haz clic en el plano para colocar <strong>{{ camaraSelec()!.nombre_ubicacion }}</strong>
+          </div>
+        }
+        @if (modoEliminar()) {
+          <div class="hint hint--remove">
+            <span class="material-icons">touch_app</span>
+            Haz clic sobre una cámara del plano para quitarla
+          </div>
+        }
+
+        <!-- Contenedor imagen + SVG -->
+        <div class="plano-container" [class.cursor-crosshair]="!!camaraSelec()" [class.cursor-remove]="modoEliminar()">
+          <img #imgPlano class="plano-img" [src]="plano()!.imagen_url" alt="Plano del condominio" (click)="onClickPlano($event)" />
+
+          <!-- Overlay SVG con las cámaras posicionadas -->
+          <svg class="plano-svg" viewBox="0 0 100 100" preserveAspectRatio="none" (click)="onClickPlano($event)">
+            @for (pos of posiciones(); track pos.camaraId) {
+              <!-- Sombra -->
+              <circle [attr.cx]="pos.pos_x * 100"
+                      [attr.cy]="pos.pos_y * 100 + 0.4"
+                      r="3.2" fill="rgba(0,0,0,0.35)" />
+              <!-- Dot cámara -->
+              <circle [attr.cx]="pos.pos_x * 100"
+                      [attr.cy]="pos.pos_y * 100"
+                      r="3"
+                      [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))"
+                      stroke="white" stroke-width="0.8" />
+              <!-- Ícono cámara (simulado con texto) -->
+              <text [attr.x]="pos.pos_x * 100"
+                    [attr.y]="pos.pos_y * 100 + 1.1"
+                    font-size="2.8" text-anchor="middle" fill="white" font-weight="700">
+                &#9679;
+              </text>
+              <!-- Etiqueta -->
+              <rect [attr.x]="pos.pos_x * 100 - 10"
+                    [attr.y]="pos.pos_y * 100 + 4"
+                    width="20" height="4.5"
+                    [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))"
+                    rx="1" opacity="0.88" />
+              <text [attr.x]="pos.pos_x * 100"
+                    [attr.y]="pos.pos_y * 100 + 7.5"
+                    font-size="2.4" text-anchor="middle" fill="white" font-family="sans-serif">
+                {{ pos.nombreCamara.length > 14 ? pos.nombreCamara.slice(0,13) + '…' : pos.nombreCamara }}
+              </text>
+            }
+          </svg>
+        </div>
+
+        @if (errorMsg()) {
+          <p class="error-msg" style="margin-top:8px">{{ errorMsg() }}</p>
+        }
+      </div>
+
+      <!-- ── Panel derecho: lista de cámaras ── -->
+      <aside class="panel-camaras">
+        <h3 class="panel-camaras__titulo">Cámaras</h3>
+        <p class="panel-camaras__hint">Selecciona una y haz clic en el plano para posicionarla</p>
+
+        <ul class="cam-lista">
+          @for (cam of camaras(); track cam.camara_id; let i = $index) {
+            <li class="cam-item"
+                [class.cam-item--selec]="camaraSelec()?.camara_id === cam.camara_id"
+                [class.cam-item--colocada]="estaColocada(cam.camara_id)"
+                (click)="seleccionarCamara(cam)">
+              <span class="cam-dot" [style.background]="colorCamara(i)"></span>
+              <div class="cam-info">
+                <span class="cam-nombre">{{ cam.nombre_ubicacion }}</span>
+                @if (estaColocada(cam.camara_id)) {
+                  <span class="cam-badge cam-badge--ok">
+                    <span class="material-icons" style="font-size:11px">place</span> Colocada
+                  </span>
+                } @else {
+                  <span class="cam-badge cam-badge--sin">Sin posición</span>
+                }
+              </div>
+              @if (estaColocada(cam.camara_id)) {
+                <button class="btn-quitar" (click)="$event.stopPropagation(); _quitar(cam.camara_id)" title="Quitar del plano">
+                  <span class="material-icons">close</span>
+                </button>
+              }
+            </li>
+          }
+        </ul>
+
+        <div class="panel-camaras__footer">
+          <button class="btn-guardar" [disabled]="guardando() || posiciones().length === 0" (click)="guardar()">
+            @if (guardando()) {
+              <span class="material-icons spin">sync</span> Guardando…
+            } @else {
+              <span class="material-icons">save</span> Guardar posiciones
+            }
+          </button>
+          <span class="panel-camaras__count">{{ posiciones().length }} de {{ camaras().length }} colocadas</span>
+        </div>
+      </aside>
+    </div>
+  }
+</div>
