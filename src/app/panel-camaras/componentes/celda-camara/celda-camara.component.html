@@ -94,6 +94,24 @@
         <span class="ia-scan__dot"></span> IA
       </div>
     }
+
+    <!-- Alertas y Raza de la Mascota -->
+    @if (razaModel() || alertasModel().length > 0) {
+      <div class="ia-resultado-overlay">
+        @if (razaModel()) {
+          <div class="ia-resultado-badge ia-resultado-badge--raza" title="Raza de perro identificada por el clasificador ResNet">
+            <span class="material-icons">pets</span>
+            <span>{{ razaModel() }}</span>
+          </div>
+        }
+        @for (alerta of alertasModel(); track alerta) {
+          <div class="ia-resultado-badge ia-resultado-badge--alerta" title="Alerta de infracción de convivencia">
+            <span class="material-icons">warning</span>
+            <span>{{ alerta === 'sin_correa' ? 'Mascota Suelta' : (alerta === 'heces_no_limpiadas' ? 'Heces Detectadas' : alerta) }}</span>
+          </div>
+        }
+      </div>
+    }
   }
 
   <!-- Input file oculto -->

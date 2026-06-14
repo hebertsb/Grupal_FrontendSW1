@@ -35,6 +35,8 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly detecciones = signal<Deteccion[]>([]);
   readonly analizando  = signal(false);
   readonly fps         = signal(0);   // frames analizados en último segundo
+  readonly alertasModel = signal<string[]>([]);
+  readonly razaModel    = signal<string | null>(null);
 
   private intervaloReloj?:  ReturnType<typeof setInterval>;
   private intervaloFrames?: ReturnType<typeof setInterval>;
@@ -96,9 +98,9 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   }
 
   onVideoLoaded() {
-    // Video cargado → iniciar captura de frames cada 2s
+    // Video cargado → iniciar captura de frames cada 800ms para hacer la simulación más fluida
     clearInterval(this.intervaloFrames);
-    this.intervaloFrames = setInterval(() => this.capturarYAnalizar(), 2000);
+    this.intervaloFrames = setInterval(() => this.capturarYAnalizar(), 800);
   }
 
   private capturarYAnalizar() {
@@ -118,7 +120,12 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     if (this.analizando()) return;
     this.analizando.set(true);
     this.ia.analizarFrame(blob).subscribe({
-      next:  r => { this.detecciones.set(r.detecciones ?? []); this.analizando.set(false); },
+      next:  r => {
+        this.detecciones.set(r.detecciones ?? []);
+        this.alertasModel.set(r.alertas ?? []);
+        this.razaModel.set(r.raza ?? null);
+        this.analizando.set(false);
+      },
       error: () => this.analizando.set(false),
     });
   }
@@ -129,6 +136,8 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     if (url) URL.revokeObjectURL(url);
     this.archivoUrl.set(null);
     this.detecciones.set([]);
+    this.alertasModel.set([]);
+    this.razaModel.set(null);
     this.modo.set('live');
     this.cargando.set(true);
     this.errorStream.set(false);
@@ -139,6 +148,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       persona: '#f85149', person: '#f85149',
       vehiculo: '#d29922', car: '#d29922', vehicle: '#d29922',
       mascota: '#3fb950',  dog: '#3fb950', cat: '#3fb950',
+      heces: '#8b5a2b', feces: '#8b5a2b', poop: '#8b5a2b',
     };
     return mapa[clase.toLowerCase()] ?? '#1f6feb';
   }

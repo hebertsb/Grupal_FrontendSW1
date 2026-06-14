@@ -14,6 +14,9 @@ export interface ResultadoAnalisis {
   detecciones: Deteccion[];
   aviso?: string;
   error?: string;
+  alertas?: string[];
+  raza?: string;
+  simulado?: boolean;
 }
 
 export interface ResultadoConexion {
@@ -33,8 +36,10 @@ export class IaServicio {
   analizarFrame(imagen: Blob): Observable<ResultadoAnalisis> {
     const fd = new FormData();
     fd.append('imagen', imagen, 'frame.jpg');
+    // Redirigir al endpoint de la IA FastAPI (/identity/analizar) en lugar de Django (/api/camaras/analizar/)
+    const apiBase = entorno.apiUrl.endsWith('/api') ? entorno.apiUrl.slice(0, -4) : entorno.apiUrl;
     return this.http.post<ResultadoAnalisis>(
-      `${entorno.apiUrl}/camaras/analizar/`,
+      `${apiBase}/identity/analizar`,
       fd,
       { headers: this.headers() }
     );
