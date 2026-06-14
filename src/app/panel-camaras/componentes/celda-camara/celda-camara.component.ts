@@ -59,7 +59,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     if (this.iaVivaActiva()) return;
     this.iaVivaActiva.set(true);
     this._llamarIaViva();
-    this.intervaloIaViva = setInterval(() => this._llamarIaViva(), 4000);
+    this.intervaloIaViva = setInterval(() => this._llamarIaViva(), 2000);
   }
 
   private _detenerIaViva() {
@@ -152,11 +152,14 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   analizarBlob(blob: Blob) {
     if (this.analizando()) return;
     this.analizando.set(true);
-    this.ia.analizarFrame(blob).subscribe({
-      next:  r => {
-        this.detecciones.set(r.detecciones ?? []);
+    this.ia.analizarFramePersona(blob).subscribe({
+      next: r => {
+        const soloPersonas = (r.detecciones ?? []).filter(
+          d => d.clase === 'persona' && d.confianza >= 0.9
+        );
+        this.detecciones.set(soloPersonas);
         this.alertasModel.set(r.alertas ?? []);
-        this.razaModel.set(r.raza ?? null);
+        this.razaModel.set(null);
         this.analizando.set(false);
       },
       error: () => this.analizando.set(false),
