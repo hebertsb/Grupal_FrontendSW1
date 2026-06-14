@@ -1,0 +1,11 @@
+<header class="cabecera">
+  <div class="cabecera__titulo">
+    <ng-content />
+  </div>
+
+  <div class="cabecera__acciones">
+    <button class="boton-icono" (click)="alternarTema()" [title]="temaActual() === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+      <span class="material-icons">{{ temaActual() === 'oscuro' ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+  </div>
+</header>

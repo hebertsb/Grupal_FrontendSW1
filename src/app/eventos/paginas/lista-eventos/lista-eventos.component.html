@@ -1,0 +1,220 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px;color:var(--advertencia)">notification_important</span>
+    Registro de Alertas
+  </app-cabecera>
+
+  <!-- Filtros -->
+  <div class="barra-filtros">
+    <div class="filtros-fila">
+      <div class="campo-busqueda">
+        <span class="material-icons">search</span>
+        <input class="campo-busqueda__input" type="text"
+               placeholder="Buscar por cámara, regla o ID…"
+               [(ngModel)]="busqueda" />
+        @if (busqueda) {
+          <button class="campo-busqueda__clear" (click)="busqueda=''">
+            <span class="material-icons">close</span>
+          </button>
+        }
+      </div>
+
+      <div class="campo-fecha">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="fechaDesde" />
+      </div>
+
+      <div class="campo-fecha">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="fechaHasta" />
+      </div>
+
+      <button class="boton-limpiar" (click)="limpiarFiltros()">
+        <span class="material-icons">filter_alt_off</span> Limpiar
+      </button>
+
+      <button class="boton-limpiar" style="margin-left:auto" (click)="cargar()" title="Recargar">
+        <span class="material-icons">refresh</span>
+      </button>
+    </div>
+
+    <div class="chips-estado">
+      @for (est of estados; track est.valor) {
+        <button class="chip" [class.chip--activo]="filtroEstado === est.valor"
+                (click)="filtroEstado = est.valor">
+          @if (est.valor !== '') {
+            <span class="chip-dot chip-dot--{{ est.valor }}"></span>
+          }
+          {{ est.etiqueta }}
+        </button>
+      }
+      <span class="contador-resultados">
+        <strong>{{ eventosFiltrados().length }}</strong> resultados
+      </span>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-contenedor">
+    @if (cargando()) {
+      <div class="estado-vacio">
+        <span class="material-icons spin">refresh</span>
+        <p>Cargando eventos…</p>
+      </div>
+    } @else if (eventosFiltrados().length === 0) {
+      <div class="estado-vacio">
+        <span class="material-icons">notifications_none</span>
+        <p>Sin eventos con los filtros seleccionados</p>
+      </div>
+    } @else {
+      <table class="tabla-eventos">
+        <thead>
+          <tr>
+            <th>Prior.</th>
+            <th>ID</th>
+            <th>Cámara</th>
+            <th>Regla detectada</th>
+            <th>Confianza IA</th>
+            <th>Estado</th>
+            <th>Fecha / Hora</th>
+            <th>Resolución</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ev of eventosFiltrados(); track ev.evento_id) {
+            <tr [class.fila--critica]="prioridad(ev) === 'critica'"
+                [class.fila--moderada]="prioridad(ev) === 'moderada'">
+
+              <!-- Prioridad con icono con borde -->
+              <td class="celda-prioridad">
+                <span class="icono-prioridad icono-prioridad--{{ prioridad(ev) }}"
+                      [title]="prioridad(ev)">
+                  <span class="material-icons">{{ iconoPrioridad(ev) }}</span>
+                </span>
+              </td>
+
+              <td class="texto-2 nowrap">#{{ ev.evento_id }}</td>
+
+              <td class="nowrap">{{ ev.camara_nombre ?? 'Cám. ' + ev.camara }}</td>
+
+              <td>{{ ev.regla_nombre ?? 'Regla ' + ev.regla }}</td>
+
+              <!-- Confianza con barra -->
+              <td class="celda-confianza">
+                <span class="conf-valor" [style.color]="colorPrioridad(ev)">
+                  {{ (ev.confianza_ia * 100).toFixed(0) }}%
+                </span>
+                <div class="barra-confianza">
+                  <div class="barra-confianza__fill"
+                       [style.width.%]="ev.confianza_ia * 100"
+                       [style.background]="colorPrioridad(ev)"></div>
+                </div>
+              </td>
+
+              <!-- Estado chip mejorado -->
+              <td>
+                <span class="estado-chip estado-chip--{{ ev.estado }}">
+                  {{ etiquetaEstado(ev.estado) }}
+                </span>
+              </td>
+
+              <td class="texto-2 nowrap">{{ ev.timestamp_deteccion | date:'dd/MM/yy HH:mm' }}</td>
+
+              <!-- Resolución -->
+              <td class="celda-resolucion">
+                @if (ev.resolucion) {
+                  <span class="resolucion-texto" [title]="ev.resolucion">{{ ev.resolucion }}</span>
+                } @else {
+                  <span class="texto-2">—</span>
+                }
+              </td>
+
+              <!-- Acciones -->
+              <td>
+                <div class="acciones">
+                  @if (ev.imagen_evidencia_path) {
+                    <button class="btn-accion" title="Ver imagen evidencia"
+                            (click)="imagenModal = ev.imagen_evidencia_path!">
+                      <span class="material-icons">image</span>
+                    </button>
+                  }
+                  @if (ev.estado === 'pendiente') {
+                    <button class="btn-accion btn-accion--amarillo" title="Tomar en atención"
+                            (click)="cambioRapido(ev, 'en_atencion')">
+                      <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="btn-accion btn-accion--verde" title="Resolver"
+                            (click)="abrirModalResolucion(ev, 'resuelto')">
+                      <span class="material-icons">check_circle</span>
+                    </button>
+                    <button class="btn-accion" title="Falsa alarma"
+                            (click)="cambioRapido(ev, 'falsa_alarma')">
+                      <span class="material-icons">cancel</span>
+                    </button>
+                  }
+                  @if (ev.estado === 'en_atencion') {
+                    <button class="btn-accion btn-accion--verde" title="Marcar resuelto"
+                            (click)="abrirModalResolucion(ev, 'resuelto')">
+                      <span class="material-icons">task_alt</span>
+                    </button>
+                    <button class="btn-accion" title="Falsa alarma"
+                            (click)="cambioRapido(ev, 'falsa_alarma')">
+                      <span class="material-icons">cancel</span>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+<!-- Modal resolución -->
+@if (eventoModal) {
+  <div class="modal-fondo" (click)="eventoModal = null">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3 class="modal__titulo">
+        <span class="material-icons">edit_note</span>
+        {{ estadoModal === 'resuelto' ? 'Resolver evento' : 'Registrar atención' }}
+        <span style="color:var(--texto-2);font-weight:400">#{{ eventoModal.evento_id }}</span>
+      </h3>
+      <p class="texto-2" style="font-size:13px;margin-bottom:16px">
+        Cámara: <strong style="color:var(--texto)">{{ eventoModal.camara_nombre }}</strong> —
+        Regla: <strong style="color:var(--texto)">{{ eventoModal.regla_nombre }}</strong>
+      </p>
+      <label class="campo__etiqueta">Notas de resolución</label>
+      <textarea class="campo__entrada campo__textarea"
+                placeholder="Describe lo observado y la acción tomada…"
+                [(ngModel)]="resolucionModal" rows="4"></textarea>
+      <div class="modal__acciones">
+        <button class="boton-primario" (click)="confirmarResolucion()">
+          <span class="material-icons">save</span> Guardar
+        </button>
+        <button class="boton-secundario" (click)="eventoModal = null">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal imagen evidencia -->
+@if (imagenModal) {
+  <div class="modal-fondo" (click)="imagenModal = null">
+    <div class="modal modal--imagen" (click)="$event.stopPropagation()">
+      <h3 class="modal__titulo">
+        <span class="material-icons">image_search</span> Imagen de evidencia
+      </h3>
+      <img [src]="imagenModal" alt="Evidencia"
+           style="max-width:100%;border-radius:10px;border:1px solid var(--borde)" />
+      <div class="modal__acciones">
+        <a [href]="imagenModal" target="_blank" class="boton-primario">
+          <span class="material-icons">open_in_new</span> Abrir original
+        </a>
+        <button class="boton-secundario" (click)="imagenModal = null">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

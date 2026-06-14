@@ -1,0 +1,62 @@
+.login-pagina {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fondo);
+  padding: 20px;
+}
+
+.login-tarjeta {
+  width: 100%;
+  max-width: 380px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: calc(var(--radio) * 2);
+  padding: 40px 32px;
+  box-shadow: var(--sombra);
+
+  &__logo {
+    text-align: center;
+    margin-bottom: 32px;
+
+    .material-icons { font-size: 48px; color: var(--primario); display: block; margin-bottom: 8px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    p  { color: var(--texto-2); font-size: 13px; }
+  }
+
+  &__form  { display: flex; flex-direction: column; gap: 16px; }
+
+  &__error {
+    background: rgba(248, 81, 73, .15);
+    border: 1px solid var(--peligro);
+    color: var(--peligro);
+    padding: 10px 12px;
+    border-radius: var(--radio);
+    font-size: 13px;
+  }
+
+  &__btn { width: 100%; justify-content: center; padding: 12px; margin-top: 4px; }
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__etiqueta { font-size: 12px; font-weight: 600; color: var(--texto-2); }
+
+  &__entrada {
+    padding: 10px 12px;
+    background: var(--superficie-2);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    color: var(--texto);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+
+    &:focus { border-color: var(--primario); }
+    &::placeholder { color: var(--texto-2); opacity: .6; }
+  }
+}

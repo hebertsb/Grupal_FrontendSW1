@@ -1,0 +1,133 @@
+<div class="celda"
+     [class.celda--seleccionada]="seleccionada"
+     [class.celda--arrastrando]="arrastrando()"
+     (dragover)="onDragOver($event)"
+     (dragleave)="onDragLeave()"
+     (drop)="onDrop($event)">
+
+  <!-- ── Zona de drag & drop (siempre activa, visible solo al arrastrar) ── -->
+  <div class="drop-zone" [class.drop-zone--visible]="arrastrando()">
+    <span class="material-icons">cloud_upload</span>
+    <span>Soltar video o imagen</span>
+  </div>
+
+  <!-- ── MODO LIVE: stream MJPEG del backend ── -->
+  @if (modo() === 'live') {
+    @if (cargando()) {
+      <div class="celda__estado">
+        <span class="material-icons estado-icono spin">radar</span>
+        <span>Conectando…</span>
+        <span class="celda__rtsp">{{ camara.rtsp_url }}</span>
+      </div>
+    }
+    @if (errorStream()) {
+      <div class="celda__estado celda__estado--error">
+        <span class="material-icons estado-icono">videocam_off</span>
+        <span>Sin señal</span>
+        <span class="celda__rtsp">{{ camara.rtsp_url }}</span>
+        <button class="btn-file" (click)="abrirSelector()">
+          <span class="material-icons">upload_file</span> Subir video / imagen
+        </button>
+      </div>
+    }
+    <img class="celda__media"
+         [src]="streamUrl()"
+         [class.celda__media--oculta]="cargando() || errorStream()"
+         (load)="alCargar()"
+         (error)="alError()"
+         alt="CAM {{ camara.camara_id }}" />
+  }
+
+  <!-- ── MODO ARCHIVO: video o imagen local + análisis IA ── -->
+  @if (modo() === 'archivo') {
+    @if (esVideo()) {
+      <video #videoLocal class="celda__media"
+             [src]="archivoUrl()!"
+             autoplay muted loop playsinline
+             (loadeddata)="onVideoLoaded()">
+      </video>
+    } @else {
+      <img class="celda__media" [src]="archivoUrl()!" alt="Imagen IA" />
+    }
+
+    <!-- Overlay SVG con bounding boxes de detecciones -->
+    @if (detecciones().length > 0) {
+      <svg class="celda__detecciones" viewBox="0 0 100 100" preserveAspectRatio="none">
+        @for (d of detecciones(); track $index) {
+          <!-- Rectángulo bbox -->
+          <rect [attr.x]="d.bbox.x * 100"
+                [attr.y]="d.bbox.y * 100"
+                [attr.width]="d.bbox.w * 100"
+                [attr.height]="d.bbox.h * 100"
+                [attr.stroke]="colorClase(d.clase)"
+                fill="none"
+                stroke-width="0.6"
+                rx="0.4" />
+          <!-- Etiqueta fondo -->
+          <rect [attr.x]="d.bbox.x * 100"
+                [attr.y]="d.bbox.y * 100 - 4"
+                [attr.width]="(d.clase.length + 5) * 1.5"
+                height="4"
+                [attr.fill]="colorClase(d.clase)"
+                opacity="0.85" />
+          <!-- Texto etiqueta -->
+          <text [attr.x]="d.bbox.x * 100 + 0.4"
+                [attr.y]="d.bbox.y * 100 - 1"
+                fill="white"
+                font-size="3"
+                font-family="monospace"
+                font-weight="bold">
+            {{ d.clase }} {{ (d.confianza * 100).toFixed(0) }}%
+          </text>
+        }
+      </svg>
+    }
+
+    <!-- Botón volver a LIVE -->
+    <button class="btn-live-back" (click)="volverALive()" title="Volver a cámara en vivo">
+      <span class="material-icons">live_tv</span>
+    </button>
+
+    <!-- Indicador IA analizando -->
+    @if (analizando()) {
+      <div class="ia-scan">
+        <span class="ia-scan__dot"></span> IA
+      </div>
+    }
+  }
+
+  <!-- Input file oculto -->
+  <input #inputFile type="file" accept="video/*,image/*"
+         style="display:none" (change)="onFileSelect($event)" />
+
+  <!-- ── HUD inferior ── -->
+  <div class="celda__hud">
+    <span class="celda__nombre">{{ camara.nombre_ubicacion }}</span>
+    <div class="celda__hud-derecha">
+      @if (modo() === 'archivo' && detecciones().length > 0) {
+        <span class="celda__detec-count">{{ detecciones().length }} obj.</span>
+      }
+      <span class="celda__hora">{{ horaActual() | date:'HH:mm:ss' }}</span>
+    </div>
+  </div>
+
+  <!-- ── Indicador LIVE / ARCHIVO ── -->
+  @if (modo() === 'live' && !errorStream() && !cargando()) {
+    <div class="celda__badge celda__badge--live">
+      <span class="live-dot"></span> LIVE
+    </div>
+  }
+  @if (modo() === 'archivo') {
+    <div class="celda__badge celda__badge--ia">
+      <span class="material-icons" style="font-size:10px">psychology</span> IA
+    </div>
+  }
+
+  <!-- ── Botón subir archivo (esquina) cuando está en modo LIVE ── -->
+  @if (modo() === 'live') {
+    <button class="btn-upload-corner" (click)="abrirSelector()" title="Subir video o imagen para análisis IA">
+      <span class="material-icons">upload</span>
+    </button>
+  }
+
+</div>

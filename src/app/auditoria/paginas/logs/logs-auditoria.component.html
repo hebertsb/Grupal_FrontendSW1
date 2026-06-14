@@ -1,0 +1,42 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">history</span>
+    Auditoría del sistema
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+    @if (cargando()) {
+      <p class="texto-2">Cargando logs…</p>
+    } @else if (logs().length === 0) {
+      <div class="estado-vacio">
+        <span class="material-icons">history_toggle_off</span>
+        <p>Sin registros de auditoría</p>
+      </div>
+    } @else {
+      <table class="tabla-simple">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Tabla</th>
+            <th>Registro</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.log_id) {
+            <tr>
+              <td class="texto-2">{{ log.created_at | date:'dd/MM/yy HH:mm:ss' }}</td>
+              <td>{{ log.usuario_id }}</td>
+              <td><span class="accion-chip">{{ log.accion }}</span></td>
+              <td class="texto-2">{{ log.tabla }}</td>
+              <td class="texto-2">{{ log.registro_id ?? '—' }}</td>
+              <td class="texto-2">{{ log.detalle ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

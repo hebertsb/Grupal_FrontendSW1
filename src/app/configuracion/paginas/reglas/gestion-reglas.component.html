@@ -1,0 +1,108 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px;color:var(--primario)">rule</span>
+    Reglas de Detección IA
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="campo-busqueda">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="Buscar regla…" [(ngModel)]="busqueda" />
+      </div>
+      <button class="boton-primario" (click)="abrirNueva()">
+        <span class="material-icons">add</span> Nueva regla
+      </button>
+    </div>
+
+    @if (cargando()) {
+      <div class="estado-vacio">
+        <span class="material-icons">psychology</span>
+        <p>Cargando reglas…</p>
+      </div>
+    } @else if (reglasFiltradas.length === 0) {
+      <div class="estado-vacio">
+        <span class="material-icons">rule</span>
+        <p>No hay reglas registradas</p>
+      </div>
+    } @else {
+      <div class="reglas-grid">
+        @for (r of reglasFiltradas; track r.regla_id) {
+          <div class="regla-card">
+
+            <div class="regla-card__cabeza">
+              <div class="regla-card__icono-wrap">
+                <span class="material-icons">psychology</span>
+              </div>
+              <div class="regla-card__meta">
+                <span class="regla-card__nombre">{{ r.nombre_regla }}</span>
+                <span class="regla-card__id texto-2">Regla #{{ r.regla_id }}</span>
+              </div>
+            </div>
+
+            <p class="regla-card__desc">{{ r.descripcion || 'Sin descripción registrada.' }}</p>
+
+            <div class="regla-card__acciones">
+              <button class="boton-icono" title="Editar" (click)="abrirEditar(r)">
+                <span class="material-icons">edit</span>
+              </button>
+
+              @if (confirmarId() === r.regla_id) {
+                <span class="regla-card__confirmar-txt">¿Eliminar?</span>
+                <button class="boton-icono boton-icono--rojo" title="Confirmar eliminación"
+                        (click)="eliminar(r.regla_id)">
+                  <span class="material-icons">delete_forever</span>
+                </button>
+                <button class="boton-icono" title="Cancelar" (click)="pedirConfirmar(-1)">
+                  <span class="material-icons">close</span>
+                </button>
+              } @else {
+                <button class="boton-icono boton-icono--rojo" title="Eliminar"
+                        (click)="pedirConfirmar(r.regla_id)">
+                  <span class="material-icons">delete</span>
+                </button>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- Modal crear / editar -->
+@if (modalOpen) {
+  <div class="modal-fondo" (click)="modalOpen = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3 class="modal__titulo">
+        <span class="material-icons">{{ editando ? 'edit' : 'add_circle' }}</span>
+        {{ editando ? 'Editar regla' : 'Nueva regla de detección' }}
+      </h3>
+
+      <div class="campo">
+        <label class="campo__etiqueta">Nombre de la regla *</label>
+        <input class="campo__entrada" [(ngModel)]="form.nombre_regla"
+               placeholder="Ej: Intrusión nocturna, Vehículo no autorizado…" />
+      </div>
+
+      <div class="campo">
+        <label class="campo__etiqueta">Descripción</label>
+        <textarea class="campo__entrada campo__textarea" [(ngModel)]="form.descripcion"
+                  placeholder="Describe cuándo se activa esta regla y qué acción debe tomar el guardia…"
+                  rows="4"></textarea>
+      </div>
+
+      <div class="modal__acciones">
+        <button class="boton-primario" (click)="guardar()" [disabled]="guardando()">
+          <span class="material-icons">save</span>
+          {{ guardando() ? 'Guardando…' : (editando ? 'Actualizar' : 'Crear regla') }}
+        </button>
+        <button class="boton-secundario" (click)="modalOpen = false">Cancelar</button>
+      </div>
+    </div>
+  </div>
+}

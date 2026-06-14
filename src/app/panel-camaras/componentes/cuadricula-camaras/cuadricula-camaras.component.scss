@@ -1,0 +1,26 @@
+.cuadricula-camaras {
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  height: 100%;
+  align-content: start;
+
+  &--1col { grid-template-columns: 1fr; }
+  &--2col { grid-template-columns: repeat(2, 1fr); }
+  &--3col { grid-template-columns: repeat(3, 1fr); }
+  &--4col { grid-template-columns: repeat(4, 1fr); }
+
+  &__vacio {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 300px;
+    color: var(--texto-2);
+
+    .material-icons { font-size: 48px; opacity: .4; }
+    p { font-size: 14px; }
+  }
+}

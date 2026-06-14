@@ -1,0 +1,122 @@
+/* =============================================
+   SIVIC — Variables de tema (día / noche)
+   ============================================= */
+:root {
+  /* Modo oscuro por defecto (panel cámaras) */
+  --fondo:          #0d1117;
+  --superficie:     #161b22;
+  --superficie-2:   #21262d;
+  --borde:          #30363d;
+  --texto:          #e6edf3;
+  --texto-2:        #8b949e;
+  --primario:       #1f6feb;
+  --primario-hover: #388bfd;
+  --peligro:        #f85149;
+  --exito:          #3fb950;
+  --advertencia:    #d29922;
+  --camara-fondo:   #010409;
+  --sombra:         0 4px 24px rgba(0,0,0,.5);
+  --radio:          8px;
+  --sidebar-ancho:  240px;
+}
+
+.tema-claro {
+  --fondo:          #f6f8fa;
+  --superficie:     #ffffff;
+  --superficie-2:   #f0f2f5;
+  --borde:          #d0d7de;
+  --texto:          #1f2328;
+  --texto-2:        #57606a;
+  --primario:       #0969da;
+  --primario-hover: #0550ae;
+  --camara-fondo:   #1c1f24;
+  --sombra:         0 4px 24px rgba(0,0,0,.12);
+}
+
+/* =============================================
+   Reset y base
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 14px;
+  background: var(--fondo);
+  color: var(--texto);
+  transition: background .25s, color .25s;
+}
+
+a { color: var(--primario); text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--borde); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--texto-2); }
+
+/* =============================================
+   Utilidades
+   ============================================= */
+.texto-peligro    { color: var(--peligro); }
+.texto-exito      { color: var(--exito); }
+.texto-advertencia{ color: var(--advertencia); }
+.texto-2          { color: var(--texto-2); }
+
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--peligro);
+  color: #fff;
+}
+
+.boton-primario {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--primario);
+  color: #fff;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background .15s;
+  &:hover { background: var(--primario-hover); }
+}
+
+.boton-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radio);
+  color: var(--texto-2);
+  transition: background .15s, color .15s;
+  &:hover { background: var(--superficie-2); color: var(--texto); }
+}
+
+/* Animación parpadeo alerta */
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .3; }
+}
+
+/* Panel full-height sin scroll */
+.pantalla-completa {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}

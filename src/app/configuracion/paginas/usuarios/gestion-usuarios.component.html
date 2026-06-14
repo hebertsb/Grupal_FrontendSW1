@@ -1,0 +1,30 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">manage_accounts</span>
+    Usuarios del sistema
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+    @if (cargando()) {
+      <p class="texto-2">Cargando usuarios…</p>
+    } @else {
+      <table class="tabla-simple">
+        <thead>
+          <tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Registro</th></tr>
+        </thead>
+        <tbody>
+          @for (u of usuarios(); track u.usuario_id) {
+            <tr>
+              <td>{{ u.nombre }}</td>
+              <td class="texto-2">{{ u.email }}</td>
+              <td>
+                <span class="rol-chip" [class.rol-chip--admin]="u.rol === 'admin'">{{ u.rol }}</span>
+              </td>
+              <td class="texto-2">{{ u.created_at ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

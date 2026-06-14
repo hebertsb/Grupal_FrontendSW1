@@ -1,0 +1,172 @@
+<div class="hq">
+  <app-cabecera>
+    <div class="hq-status">
+      <span class="hq-status__dot"></span>
+      <span>SISTEMA EN LÍNEA</span>
+      <span class="hq-status__sep">|</span>
+      <span class="material-icons" style="font-size:16px;vertical-align:middle;color:var(--primario)">shield</span>
+      Centro de Seguridad
+    </div>
+  </app-cabecera>
+
+  <div class="hq__body">
+
+    @if (cargando()) {
+      <div class="hq__loading">
+        <span class="material-icons spin">radar</span>
+        <p>Inicializando sistema de vigilancia…</p>
+      </div>
+    } @else {
+
+      <!-- Barra de nivel de amenaza -->
+      <div class="amenaza"
+           [class.amenaza--alto]="criticas() > 0"
+           [class.amenaza--medio]="criticas() === 0 && moderadas() > 0">
+        <span class="material-icons amenaza__icono">
+          {{ criticas() > 0 ? 'crisis_alert' : moderadas() > 0 ? 'warning' : 'verified_user' }}
+        </span>
+        <div class="amenaza__texto">
+          <span class="amenaza__etiqueta">NIVEL DE AMENAZA</span>
+          <span class="amenaza__valor">
+            {{ criticas() > 0 ? 'ALTO — Alertas críticas activas' : moderadas() > 0 ? 'MODERADO — Eventos en revisión' : 'NORMAL — Sin incidentes activos' }}
+          </span>
+        </div>
+        <div class="amenaza__leds">
+          <span class="led led--verde" [class.led--on]="true"></span>
+          <span class="led led--amarillo" [class.led--on]="criticas() > 0 || moderadas() > 0"></span>
+          <span class="led led--rojo" [class.led--on]="criticas() > 0"></span>
+        </div>
+      </div>
+
+      <!-- Semáforo -->
+      <div class="semaforo-grid">
+
+        <div class="semaforo semaforo--critico" [class.semaforo--activo]="criticas() > 0">
+          <div class="semaforo__glow"></div>
+          <div class="semaforo__ring">
+            <span class="material-icons">crisis_alert</span>
+          </div>
+          <div class="semaforo__num">{{ criticas() }}</div>
+          <div class="semaforo__label">CRÍTICAS</div>
+          <div class="semaforo__sub">Confianza IA ≥ 80%</div>
+        </div>
+
+        <div class="semaforo semaforo--moderado" [class.semaforo--activo]="moderadas() > 0">
+          <div class="semaforo__glow"></div>
+          <div class="semaforo__ring">
+            <span class="material-icons">warning</span>
+          </div>
+          <div class="semaforo__num">{{ moderadas() }}</div>
+          <div class="semaforo__label">MODERADAS</div>
+          <div class="semaforo__sub">Confianza IA &lt; 80%</div>
+        </div>
+
+        <div class="semaforo semaforo--normal">
+          <div class="semaforo__glow"></div>
+          <div class="semaforo__ring">
+            <span class="material-icons">check_circle</span>
+          </div>
+          <div class="semaforo__num">{{ resueltos() }}</div>
+          <div class="semaforo__label">RESUELTOS HOY</div>
+          <div class="semaforo__sub">Atendidos hoy</div>
+        </div>
+
+      </div>
+
+      <!-- Grid: accesos rápidos + cola de alertas -->
+      <div class="hq__grid">
+
+        <!-- Panel accesos -->
+        <div class="panel-card">
+          <div class="panel-card__titulo">
+            <span class="material-icons">apps</span> Acceso rápido
+          </div>
+          <div class="accesos-lista">
+            <a routerLink="/camaras" class="acceso acceso--primario">
+              <div class="acceso__icono-wrap">
+                <span class="material-icons">videocam</span>
+              </div>
+              <div class="acceso__info">
+                <span class="acceso__nombre">Monitor de Cámaras</span>
+                <span class="acceso__desc">Visualización en vivo</span>
+              </div>
+              <span class="material-icons acceso__flecha">chevron_right</span>
+            </a>
+            <a routerLink="/eventos" class="acceso">
+              <div class="acceso__icono-wrap">
+                <span class="material-icons">notification_important</span>
+              </div>
+              <div class="acceso__info">
+                <span class="acceso__nombre">Registro de Alertas</span>
+                <span class="acceso__desc">Historial y gestión</span>
+              </div>
+              @if (criticas() > 0) {
+                <span class="badge-urgente">{{ criticas() }}</span>
+              }
+              <span class="material-icons acceso__flecha">chevron_right</span>
+            </a>
+            <a routerLink="/reglas" class="acceso">
+              <div class="acceso__icono-wrap">
+                <span class="material-icons">rule</span>
+              </div>
+              <div class="acceso__info">
+                <span class="acceso__nombre">Reglas de Detección IA</span>
+                <span class="acceso__desc">Parámetros del sistema</span>
+              </div>
+              <span class="material-icons acceso__flecha">chevron_right</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Panel cola de alertas -->
+        <div class="panel-card panel-card--alertas">
+          <div class="panel-card__titulo">
+            <span class="material-icons"
+                  [style.color]="criticas() > 0 ? 'var(--peligro)' : 'var(--advertencia)'">
+              {{ criticas() > 0 ? 'crisis_alert' : 'notifications_active' }}
+            </span>
+            Alertas pendientes de atención
+            @if (alertas().length > 0) {
+              <span class="badge-count">{{ alertas().length }}</span>
+            }
+          </div>
+
+          @if (alertas().length === 0) {
+            <div class="sin-alertas">
+              <div class="sin-alertas__icono">
+                <span class="material-icons">verified_user</span>
+              </div>
+              <p>Sin alertas pendientes</p>
+              <small>Sistema en calma — continúe la vigilancia</small>
+            </div>
+          } @else {
+            <div class="cola-alertas">
+              @for (ev of alertas(); track ev.evento_id) {
+                <div class="alerta-card"
+                     [class.alerta-card--critica]="prioridad(ev) === 'critica'"
+                     [class.alerta-card--moderada]="prioridad(ev) === 'moderada'">
+                  <div class="alerta-card__indicador" [style.background]="colorPrioridad(ev)">
+                    <span class="material-icons">{{ iconoPrioridad(ev) }}</span>
+                  </div>
+                  <div class="alerta-card__cuerpo">
+                    <div class="alerta-card__camara">{{ ev.camara_nombre ?? 'Cám. ' + ev.camara }}</div>
+                    <div class="alerta-card__regla">{{ ev.regla_nombre ?? 'Regla ' + ev.regla }}</div>
+                  </div>
+                  <div class="alerta-card__meta">
+                    <span class="alerta-card__conf" [style.color]="colorPrioridad(ev)">
+                      {{ (ev.confianza_ia * 100).toFixed(0) }}%
+                    </span>
+                    <span class="alerta-card__hora">{{ ev.timestamp_deteccion | date:'HH:mm' }}</span>
+                  </div>
+                  <a routerLink="/eventos" class="alerta-card__btn">Atender</a>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+
+    }
+  </div>
+</div>

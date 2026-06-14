@@ -1,0 +1,30 @@
+<nav class="barra-lateral">
+  <div class="logo">
+    <span class="material-icons logo__icono">security</span>
+    <span class="logo__texto">SIVIC</span>
+  </div>
+
+  <ul class="nav-lista">
+    @for (enlace of enlacesFiltradosPorRol(); track enlace.ruta) {
+      <li>
+        <a class="nav-item"
+           [routerLink]="enlace.ruta"
+           routerLinkActive="nav-item--activo">
+          <span class="material-icons">{{ enlace.icono }}</span>
+          <span class="nav-item__texto">{{ enlace.etiqueta }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <div class="perfil">
+    <span class="material-icons perfil__icono">account_circle</span>
+    <div class="perfil__info">
+      <span class="perfil__nombre">{{ usuario()?.nombre }}</span>
+      <span class="perfil__rol">{{ usuario()?.rol }}</span>
+    </div>
+    <button class="boton-icono" (click)="cerrarSesion()" title="Cerrar sesión">
+      <span class="material-icons">logout</span>
+    </button>
+  </div>
+</nav>

@@ -1,0 +1,21 @@
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 20px;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  flex-shrink: 0;
+
+  &__titulo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--texto);
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 4px;
+  }
+}

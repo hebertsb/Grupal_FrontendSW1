@@ -1,0 +1,227 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px;color:var(--primario)">settings_input_component</span>
+    Configuración de Cámaras
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar__info">
+        <span class="toolbar__total">{{ camaras().length }} cámaras registradas</span>
+        <span class="toolbar__hint texto-2">Drag & Drop un video/imagen en cualquier cámara del panel para análisis IA</span>
+      </div>
+      <button class="boton-primario" (click)="abrirNueva()">
+        <span class="material-icons">add</span> Nueva cámara
+      </button>
+    </div>
+
+    @if (cargando()) {
+      <div class="estado-vacio">
+        <span class="material-icons spin">settings_input_component</span>
+        <p>Cargando configuración…</p>
+      </div>
+    } @else if (camaras().length === 0) {
+      <div class="estado-vacio">
+        <span class="material-icons">videocam_off</span>
+        <p>No hay cámaras configuradas</p>
+        <button class="boton-primario" style="margin-top:12px" (click)="abrirNueva()">
+          <span class="material-icons">add</span> Agregar primera cámara
+        </button>
+      </div>
+    } @else {
+      <div class="camaras-grid">
+        @for (cam of camaras(); track cam.camara_id) {
+          <div class="cam-card" [class.cam-card--inactiva]="!cam.is_active">
+
+            <!-- Preview miniatura del stream -->
+            <div class="cam-card__preview">
+              @if (cam.is_active) {
+                <img class="cam-card__preview-img"
+                     [src]="miniStreamUrl(cam)"
+                     alt="Preview"
+                     (error)="$any($event.target).style.display='none'" />
+              }
+              <div class="cam-card__preview-overlay">
+                <span class="material-icons">{{ cam.is_active ? 'videocam' : 'videocam_off' }}</span>
+              </div>
+              <!-- Estado activo/inactivo -->
+              <div class="cam-card__estado-dot"
+                   [style.background]="cam.is_active ? 'var(--exito)' : 'var(--texto-2)'"
+                   [title]="cam.is_active ? 'Activa' : 'Inactiva'"></div>
+            </div>
+
+            <!-- Info -->
+            <div class="cam-card__body">
+              <div class="cam-card__cabeza">
+                <span class="cam-card__nombre">{{ cam.nombre_ubicacion }}</span>
+                <span class="cam-card__id texto-2">#{{ cam.camara_id }}</span>
+              </div>
+              <div class="cam-card__url" [title]="cam.rtsp_url">
+                <span class="material-icons">link</span>
+                <span class="cam-card__url-texto">{{ cam.rtsp_url }}</span>
+              </div>
+
+              <!-- Estado de conexión (después de probar) -->
+              @if (estadosConexion()[cam.camara_id]) {
+                <div class="cam-card__conexion" [style.color]="colorEstado(cam.camara_id)">
+                  <span class="material-icons"
+                        [class.spin]="estadosConexion()[cam.camara_id] === 'probando'">
+                    {{ iconoEstado(cam.camara_id) }}
+                  </span>
+                  {{ mensajesConexion()[cam.camara_id] }}
+                </div>
+              }
+            </div>
+
+            <!-- Acciones -->
+            <div class="cam-card__acciones">
+              <button class="btn-icono" title="Probar conexión" (click)="probarCamara(cam)">
+                <span class="material-icons">wifi_tethering</span>
+              </button>
+              <button class="btn-icono" title="Editar" (click)="abrirEditar(cam)">
+                <span class="material-icons">edit</span>
+              </button>
+              <button class="btn-icono" [title]="cam.is_active ? 'Desactivar' : 'Activar'"
+                      (click)="alternarActiva(cam)">
+                <span class="material-icons">{{ cam.is_active ? 'pause_circle' : 'play_circle' }}</span>
+              </button>
+              <button class="btn-icono btn-icono--rojo" title="Eliminar" (click)="eliminar(cam.camara_id)">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ── Modal crear / editar ── -->
+@if (modalOpen()) {
+  <div class="modal-fondo" (click)="modalOpen.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <h3 class="modal__titulo">
+        <span class="material-icons">{{ editandoId() ? 'edit' : 'add_circle' }}</span>
+        {{ editandoId() ? 'Editar cámara' : 'Nueva cámara' }}
+      </h3>
+
+      <!-- Nombre -->
+      <div class="campo">
+        <label class="campo__etiqueta">Nombre / Ubicación *</label>
+        <input class="campo__entrada" [(ngModel)]="form.nombre_ubicacion"
+               placeholder="Ej: Entrada principal, Parqueo B, Pasillo norte…" />
+      </div>
+
+      <!-- Toggle modo URL -->
+      <div class="toggle-modo">
+        <button class="toggle-modo__btn" [class.toggle-modo__btn--activo]="form.modo_url === 'asistido'"
+                (click)="form.modo_url = 'asistido'">
+          <span class="material-icons">build</span> Asistido
+        </button>
+        <button class="toggle-modo__btn" [class.toggle-modo__btn--activo]="form.modo_url === 'manual'"
+                (click)="form.modo_url = 'manual'">
+          <span class="material-icons">code</span> URL directa
+        </button>
+      </div>
+
+      @if (form.modo_url === 'asistido') {
+        <!-- Campos asistidos para construir URL RTSP -->
+        <div class="campos-rtsp">
+          <div class="campo">
+            <label class="campo__etiqueta">Protocolo</label>
+            <select class="campo__entrada" [(ngModel)]="form.protocolo">
+              <option value="rtsp">RTSP (cámara IP / app celular)</option>
+              <option value="http">HTTP (MJPEG directo)</option>
+              <option value="https">HTTPS</option>
+            </select>
+          </div>
+          <div class="rtsp-fila">
+            <div class="campo" style="flex:2">
+              <label class="campo__etiqueta">IP / Host *</label>
+              <input class="campo__entrada" [(ngModel)]="form.host"
+                     placeholder="192.168.1.3" />
+            </div>
+            <div class="campo" style="flex:1">
+              <label class="campo__etiqueta">Puerto</label>
+              <input class="campo__entrada" [(ngModel)]="form.puerto"
+                     placeholder="8554" />
+            </div>
+          </div>
+          <div class="rtsp-fila">
+            <div class="campo" style="flex:1">
+              <label class="campo__etiqueta">Usuario</label>
+              <input class="campo__entrada" [(ngModel)]="form.usuario"
+                     placeholder="admin" />
+            </div>
+            <div class="campo" style="flex:1">
+              <label class="campo__etiqueta">Contraseña</label>
+              <input class="campo__entrada" type="password" [(ngModel)]="form.password"
+                     placeholder="••••••" />
+            </div>
+          </div>
+          <div class="campo">
+            <label class="campo__etiqueta">Ruta del stream</label>
+            <input class="campo__entrada" [(ngModel)]="form.ruta"
+                   placeholder="/  ó  /h264  ó  /stream1" />
+          </div>
+        </div>
+
+        <!-- Preview URL construida -->
+        <div class="url-preview">
+          <span class="material-icons">link</span>
+          <code class="url-preview__texto">{{ urlConstructida() }}</code>
+        </div>
+      } @else {
+        <!-- URL manual -->
+        <div class="campo">
+          <label class="campo__etiqueta">URL completa *</label>
+          <input class="campo__entrada" [(ngModel)]="form.rtsp_url"
+                 placeholder="rtsp://admin:pass@192.168.1.3:8554/" />
+          <span class="campo__hint texto-2">Puedes incluir usuario y contraseña en la URL: rtsp://user:pass&#64;host:port/ruta</span>
+        </div>
+      }
+
+      <!-- Estado activa -->
+      <label class="campo-check">
+        <input type="checkbox" [(ngModel)]="form.is_active" />
+        <span>Cámara activa en el sistema</span>
+      </label>
+
+      <!-- Probar conexión -->
+      <div class="probar-bloque">
+        <button class="btn-probar" (click)="probarUrlForm()" [disabled]="probandoForm()">
+          <span class="material-icons" [class.spin]="probandoForm()">wifi_tethering</span>
+          {{ probandoForm() ? 'Probando…' : 'Probar conexión' }}
+        </button>
+        @if (resultadoForm()) {
+          <div class="probar-resultado"
+               [style.color]="resultadoForm()!.ok ? 'var(--exito)' : 'var(--peligro)'">
+            <span class="material-icons">{{ resultadoForm()!.ok ? 'check_circle' : 'error' }}</span>
+            {{ resultadoForm()!.msg }}
+          </div>
+        }
+      </div>
+
+      @if (errorForm()) {
+        <div class="probar-resultado" style="color:var(--peligro)">
+          <span class="material-icons">error</span>
+          {{ errorForm() }}
+        </div>
+      }
+
+      <div class="modal__acciones">
+        <button class="boton-primario" (click)="guardar()" [disabled]="guardando()">
+          <span class="material-icons">save</span>
+          {{ guardando() ? 'Guardando…' : (editandoId() ? 'Actualizar' : 'Guardar cámara') }}
+        </button>
+        <button class="boton-secundario" (click)="modalOpen.set(false)">Cancelar</button>
+      </div>
+
+    </div>
+  </div>
+}

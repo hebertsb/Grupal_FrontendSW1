@@ -1,0 +1,13 @@
+.diseno-principal {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+
+  &__contenido {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--fondo);
+  }
+}

@@ -1,0 +1,73 @@
+<div class="pantalla-completa panel-principal">
+
+  <!-- Cabecera del panel -->
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">videocam</span>
+    Panel de Cámaras
+    <span class="total-camaras">{{ camaras().length }} cámaras</span>
+  </app-cabecera>
+
+  <!-- Barra de herramientas -->
+  <div class="barra-herramientas">
+
+    <!-- Selector de layout -->
+    <div class="barra-herramientas__grupo">
+      <span class="barra-herramientas__etiqueta">Vista</span>
+      @for (op of opcionesLayout; track op.columnas) {
+        <button class="boton-icono"
+                [class.boton-icono--activo]="columnas() === op.columnas"
+                [title]="op.titulo"
+                (click)="cambiarLayout(op.columnas)">
+          <span class="material-icons">{{ op.icono }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Info cámara en foco -->
+    @if (camaraFoco()) {
+      <div class="barra-herramientas__foco">
+        <span class="material-icons">location_on</span>
+        {{ camaraFoco()!.nombre_ubicacion }}
+        <button class="boton-icono" (click)="seleccionarCamara(camaraFoco()!)" title="Volver a cuadrícula">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    }
+
+    <div class="barra-herramientas__espacio"></div>
+
+    <!-- Estado carga -->
+    @if (cargando()) {
+      <span class="barra-herramientas__etiqueta">Cargando…</span>
+    }
+  </div>
+
+  <!-- Cuadrícula principal -->
+  <div class="panel-principal__cuadricula">
+    @if (!cargando()) {
+      <app-cuadricula-camaras
+        [camaras]="camarasVisibles()"
+        [columnas]="columnasVisibles()"
+        [camaraSeleccionadaId]="camaraFoco()?.camara_id ?? null"
+        (seleccionar)="seleccionarCamara($event)"
+      />
+    }
+  </div>
+
+  <!-- Barra lateral mini: lista de cámaras -->
+  <div class="lista-lateral">
+    @for (cam of camaras(); track cam.camara_id) {
+      <div class="lista-lateral__item"
+           [class.lista-lateral__item--activo]="camaraFoco()?.camara_id === cam.camara_id"
+           (click)="seleccionarCamara(cam)">
+        <span class="material-icons lista-lateral__icono">{{ cam.is_active ? 'videocam' : 'videocam_off' }}</span>
+        <div class="lista-lateral__info">
+          <span class="lista-lateral__nombre">{{ cam.nombre_ubicacion }}</span>
+          <span class="lista-lateral__ubicacion">{{ cam.rtsp_url }}</span>
+        </div>
+        <span class="lista-lateral__punto" [class.lista-lateral__punto--activo]="cam.is_active"></span>
+      </div>
+    }
+  </div>
+
+</div>

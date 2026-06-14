@@ -1,0 +1,96 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">dashboard</span>
+    Dashboard
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    @if (cargando()) {
+      <p class="texto-2">Cargando estadísticas…</p>
+    } @else {
+
+      <!-- Stats cards -->
+      <div class="stats-grid">
+        @for (s of stats(); track s.etiqueta) {
+          <div class="stat-card">
+            <span class="material-icons stat-card__icono" [style.color]="s.color">{{ s.icono }}</span>
+            <div class="stat-card__datos">
+              <span class="stat-card__valor">{{ s.valor }}</span>
+              <span class="stat-card__etiqueta texto-2">{{ s.etiqueta }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Accesos rápidos -->
+      <h2 class="seccion-titulo">Accesos rápidos</h2>
+      <div class="accesos-grid">
+        <a routerLink="/configuracion/camaras" class="acceso-card">
+          <span class="material-icons">settings_input_component</span>
+          <span>Gestionar cámaras</span>
+        </a>
+        <a routerLink="/configuracion/usuarios" class="acceso-card">
+          <span class="material-icons">manage_accounts</span>
+          <span>Gestionar usuarios</span>
+        </a>
+        <a routerLink="/configuracion/reglas" class="acceso-card">
+          <span class="material-icons">rule</span>
+          <span>Reglas IA</span>
+        </a>
+        <a routerLink="/eventos" class="acceso-card">
+          <span class="material-icons">notification_important</span>
+          <span>Ver todos los eventos</span>
+        </a>
+        <a routerLink="/camaras" class="acceso-card">
+          <span class="material-icons">videocam</span>
+          <span>Panel de cámaras</span>
+        </a>
+        <a routerLink="/auditoria" class="acceso-card">
+          <span class="material-icons">history</span>
+          <span>Auditoría</span>
+        </a>
+      </div>
+
+      <!-- Últimos eventos -->
+      @if (recientes().length > 0) {
+        <h2 class="seccion-titulo">Últimos eventos</h2>
+        <div class="tabla-card">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Cámara</th>
+                <th>Regla</th>
+                <th>Confianza</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ev of recientes(); track ev.evento_id) {
+                <tr>
+                  <td>{{ ev.camara_nombre ?? 'Cám. ' + ev.camara }}</td>
+                  <td>{{ ev.regla_nombre ?? 'Regla ' + ev.regla }}</td>
+                  <td>
+                    <span [style.color]="ev.confianza_ia >= 0.8 ? 'var(--peligro)' : 'var(--texto-2)'">
+                      {{ (ev.confianza_ia * 100).toFixed(0) }}%
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge" [style.border-color]="colorEstado(ev.estado)" [style.color]="colorEstado(ev.estado)">
+                      {{ etiquetaEstado(ev.estado) }}
+                    </span>
+                  </td>
+                  <td class="texto-2">{{ ev.timestamp_deteccion.substring(0, 16).replace('T', ' ') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="texto-2" style="margin-top:24px">Sin eventos registrados.</p>
+      }
+
+    }
+  </div>
+</div>

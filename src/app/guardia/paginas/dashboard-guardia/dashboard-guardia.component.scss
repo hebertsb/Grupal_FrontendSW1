@@ -1,0 +1,546 @@
+/* ── Layout base ── */
+.hq {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hq__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Status bar en cabecera ── */
+.hq-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--exito);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--exito) 60%, transparent);
+    animation: pulso-verde 2s infinite;
+  }
+
+  &__sep { opacity: 0.3; }
+}
+
+@keyframes pulso-verde {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--exito) 60%, transparent); }
+  70%  { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ── Loading ── */
+.hq__loading {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; gap: 12px; color: var(--texto-2);
+  .material-icons { font-size: 52px; color: var(--primario); }
+  p { font-size: 14px; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 1.2s linear infinite; }
+
+/* ── Barra nivel de amenaza ── */
+.amenaza {
+  border-radius: 14px;
+  border: 1px solid var(--borde);
+  background: linear-gradient(135deg, var(--superficie) 0%, var(--superficie-2) 100%);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--exito) 8%, transparent) 0%, transparent 70%);
+    transition: background 0.5s;
+    pointer-events: none;
+  }
+
+  &--medio::before {
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--advertencia) 12%, transparent) 0%, transparent 60%);
+  }
+
+  &--alto::before {
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--peligro) 14%, transparent) 0%, transparent 60%);
+    animation: flicker 4s infinite;
+  }
+
+  &__icono {
+    font-size: 30px;
+    color: var(--exito);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: color 0.4s;
+
+    .amenaza--medio & { color: var(--advertencia); }
+    .amenaza--alto &  { color: var(--peligro); }
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__etiqueta {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    color: var(--texto-2);
+    text-transform: uppercase;
+  }
+
+  &__valor {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto);
+  }
+
+  &__leds {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes flicker {
+  0%, 89%, 91%, 93%, 100% { opacity: 1; }
+  90%, 92% { opacity: 0.65; }
+}
+
+/* ── LEDs ── */
+.led {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--borde);
+  transition: all 0.4s;
+
+  &--verde.led--on  { background: var(--exito);       box-shadow: 0 0 10px var(--exito); }
+  &--amarillo.led--on { background: var(--advertencia); box-shadow: 0 0 10px var(--advertencia); }
+  &--rojo.led--on {
+    background: var(--peligro);
+    box-shadow: 0 0 10px var(--peligro);
+    animation: pulso-rojo 1s infinite;
+  }
+}
+
+@keyframes pulso-rojo {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--peligro) 80%, transparent); }
+  70%  { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ── Semáforo cards ── */
+.semaforo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.semaforo {
+  position: relative;
+  border-radius: 18px;
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--borde);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.3s;
+  cursor: default;
+
+  &:hover { transform: translateY(-3px); }
+
+  &__glow {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    filter: blur(50px);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+
+  &:hover .semaforo__glow,
+  &--activo .semaforo__glow { opacity: 0.35; }
+
+  &__ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    transition: box-shadow 0.3s;
+
+    .material-icons { font-size: 30px; }
+  }
+
+  &__num {
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__sub {
+    font-size: 11px;
+    opacity: 0.5;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Variantes */
+  &--critico {
+    background: linear-gradient(160deg, #1d0909 0%, var(--superficie) 60%);
+    border-color: color-mix(in srgb, var(--peligro) 35%, transparent);
+
+    .semaforo__glow { background: var(--peligro); }
+    .semaforo__ring {
+      border-color: var(--peligro);
+      background: color-mix(in srgb, var(--peligro) 14%, transparent);
+    }
+    .semaforo__ring .material-icons { color: var(--peligro); }
+    .semaforo__num   { color: var(--peligro); }
+    .semaforo__label { color: var(--peligro); }
+  }
+
+  &--moderado {
+    background: linear-gradient(160deg, #1d1409 0%, var(--superficie) 60%);
+    border-color: color-mix(in srgb, var(--advertencia) 35%, transparent);
+
+    .semaforo__glow { background: var(--advertencia); }
+    .semaforo__ring {
+      border-color: var(--advertencia);
+      background: color-mix(in srgb, var(--advertencia) 14%, transparent);
+    }
+    .semaforo__ring .material-icons { color: var(--advertencia); }
+    .semaforo__num   { color: var(--advertencia); }
+    .semaforo__label { color: var(--advertencia); }
+  }
+
+  &--normal {
+    background: linear-gradient(160deg, #091d0f 0%, var(--superficie) 60%);
+    border-color: color-mix(in srgb, var(--exito) 35%, transparent);
+
+    .semaforo__glow { background: var(--exito); }
+    .semaforo__ring {
+      border-color: var(--exito);
+      background: color-mix(in srgb, var(--exito) 14%, transparent);
+    }
+    .semaforo__ring .material-icons { color: var(--exito); }
+    .semaforo__num   { color: var(--exito); }
+    .semaforo__label { color: var(--exito); }
+  }
+
+  /* Animación pulsante cuando hay alertas activas */
+  &--critico.semaforo--activo {
+    box-shadow: 0 0 0 0 transparent;
+    animation: pulso-card-rojo 2s infinite;
+
+    .semaforo__ring {
+      box-shadow: 0 0 16px color-mix(in srgb, var(--peligro) 50%, transparent);
+    }
+  }
+
+  &--moderado.semaforo--activo {
+    animation: pulso-card-amarillo 2.5s infinite;
+
+    .semaforo__ring {
+      box-shadow: 0 0 16px color-mix(in srgb, var(--advertencia) 50%, transparent);
+    }
+  }
+}
+
+@keyframes pulso-card-rojo {
+  0%, 100% { box-shadow: 0 0 8px 0 transparent; }
+  50% { box-shadow: 0 0 24px 4px color-mix(in srgb, var(--peligro) 20%, transparent); }
+}
+
+@keyframes pulso-card-amarillo {
+  0%, 100% { box-shadow: 0 0 8px 0 transparent; }
+  50% { box-shadow: 0 0 24px 4px color-mix(in srgb, var(--advertencia) 20%, transparent); }
+}
+
+/* ── Layout inferior ── */
+.hq__grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Panel genérico ── */
+.panel-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &--alertas { flex: 1; }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--texto-2);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--borde);
+    margin-bottom: 14px;
+
+    .material-icons { font-size: 18px; }
+  }
+}
+
+.badge-count {
+  margin-left: auto;
+  background: var(--peligro);
+  color: white;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── Accesos rápidos ── */
+.accesos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acceso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  color: var(--texto);
+  text-decoration: none;
+  transition: all 0.18s;
+  position: relative;
+
+  &:hover {
+    border-color: var(--primario);
+    background: color-mix(in srgb, var(--primario) 6%, var(--superficie-2));
+
+    .acceso__flecha { color: var(--primario); transform: translateX(2px); }
+    .acceso__icono-wrap { box-shadow: 0 0 12px color-mix(in srgb, var(--primario) 40%, transparent); }
+  }
+
+  &--primario {
+    border-color: color-mix(in srgb, var(--primario) 45%, transparent);
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--primario) 10%, var(--superficie-2)) 0%,
+      var(--superficie-2) 100%);
+
+    .acceso__icono-wrap {
+      background: color-mix(in srgb, var(--primario) 20%, transparent);
+      border-color: color-mix(in srgb, var(--primario) 50%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--primario) 30%, transparent);
+    }
+  }
+
+  &__icono-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: box-shadow 0.18s;
+
+    .material-icons { font-size: 22px; color: var(--primario); }
+  }
+
+  &__info { flex: 1; min-width: 0; }
+  &__nombre { display: block; font-size: 13px; font-weight: 600; }
+  &__desc { display: block; font-size: 11px; color: var(--texto-2); margin-top: 1px; }
+
+  &__flecha {
+    font-size: 18px;
+    color: var(--borde);
+    transition: color 0.18s, transform 0.18s;
+    flex-shrink: 0;
+  }
+}
+
+.badge-urgente {
+  background: var(--peligro);
+  color: white;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  animation: pulso-rojo 1s infinite;
+}
+
+/* ── Cola de alertas ── */
+.cola-alertas {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.alerta-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 13px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 11px;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+
+  &:hover { border-color: var(--primario-hover); }
+
+  &--critica {
+    border-left: 3px solid var(--peligro);
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--peligro) 7%, var(--superficie-2)) 0%,
+      var(--superficie-2) 100%);
+    animation: pulso-fila 2.5s infinite;
+  }
+
+  &--moderada {
+    border-left: 3px solid var(--advertencia);
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--advertencia) 5%, var(--superficie-2)) 0%,
+      var(--superficie-2) 100%);
+  }
+
+  &__indicador {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .material-icons { font-size: 20px; color: white; }
+  }
+
+  &__cuerpo { flex: 1; min-width: 0; }
+  &__camara { font-size: 13px; font-weight: 600; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__regla  { font-size: 11px; color: var(--texto-2); margin-top: 2px; }
+
+  &__meta {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+  }
+  &__conf { font-size: 15px; font-weight: 800; }
+  &__hora { font-size: 10px; color: var(--texto-2); }
+
+  &__btn {
+    background: var(--primario);
+    color: white;
+    border: none;
+    border-radius: 7px;
+    padding: 6px 13px;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 0.82; }
+  }
+}
+
+@keyframes pulso-fila {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%  { box-shadow: 0 0 10px 2px color-mix(in srgb, var(--peligro) 18%, transparent); }
+}
+
+/* ── Sin alertas ── */
+.sin-alertas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+
+  &__icono {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--exito) 12%, transparent);
+    border: 2px solid color-mix(in srgb, var(--exito) 40%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px color-mix(in srgb, var(--exito) 20%, transparent);
+
+    .material-icons { font-size: 36px; color: var(--exito); }
+  }
+
+  p { color: var(--texto); font-size: 14px; font-weight: 600; }
+  small { color: var(--texto-2); font-size: 12px; }
+}

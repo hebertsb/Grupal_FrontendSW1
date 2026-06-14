@@ -1,0 +1,16 @@
+<div class="cuadricula-camaras" [ngClass]="claseLayout()">
+  @for (camara of camaras; track camara.camara_id) {
+    <app-celda-camara
+      [camara]="camara"
+      [seleccionada]="camaraSeleccionadaId === camara.camara_id"
+      (click)="seleccionar.emit(camara)"
+    />
+  }
+
+  @if (camaras.length === 0) {
+    <div class="cuadricula-camaras__vacio">
+      <span class="material-icons">videocam_off</span>
+      <p>No hay cámaras activas</p>
+    </div>
+  }
+</div>
