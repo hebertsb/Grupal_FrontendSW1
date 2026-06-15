@@ -11,12 +11,14 @@ export interface Deteccion {
 }
 
 export interface ResultadoAnalisis {
-  detecciones: Deteccion[];
-  aviso?: string;
-  error?: string;
-  alertas?: string[];
-  raza?: string;
-  simulado?: boolean;
+  detecciones:      Deteccion[];
+  aviso?:           string;
+  error?:           string;
+  alertas?:         string[];
+  raza?:            string;
+  simulado?:        boolean;
+  conteo_personas?: number;
+  nivel?:           'normal' | 'sospechoso' | 'critico';
 }
 
 export interface ResultadoConexion {

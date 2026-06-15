@@ -33,12 +33,14 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly arrastrando = signal(false);
   readonly archivoUrl  = signal<string | null>(null);
   readonly esVideo     = signal(false);
-  readonly detecciones  = signal<Deteccion[]>([]);
-  readonly analizando   = signal(false);
-  readonly fps          = signal(0);
-  readonly alertasModel = signal<string[]>([]);
-  readonly razaModel    = signal<string | null>(null);
-  readonly iaVivaActiva = signal(false);
+  readonly detecciones    = signal<Deteccion[]>([]);
+  readonly analizando     = signal(false);
+  readonly fps            = signal(0);
+  readonly alertasModel   = signal<string[]>([]);
+  readonly razaModel      = signal<string | null>(null);
+  readonly iaVivaActiva   = signal(false);
+  readonly conteoPersonas = signal(0);
+  readonly nivel          = signal<'normal' | 'sospechoso' | 'critico' | null>(null);
 
   private intervaloReloj?:   ReturnType<typeof setInterval>;
   private intervaloFrames?:  ReturnType<typeof setInterval>;
@@ -68,6 +70,8 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     this.iaVivaActiva.set(false);
     this.detecciones.set([]);
     this.alertasModel.set([]);
+    this.conteoPersonas.set(0);
+    this.nivel.set(null);
   }
 
   private _llamarIaViva() {
@@ -80,10 +84,28 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
         );
         this.detecciones.set(soloPersonas);
         this.alertasModel.set(r.alertas ?? []);
+        this.conteoPersonas.set(r.conteo_personas ?? soloPersonas.length);
+        this.nivel.set(r.nivel ?? null);
         this.analizando.set(false);
       },
       error: () => this.analizando.set(false),
     });
+  }
+
+  colorNivel(): string {
+    switch (this.nivel()) {
+      case 'critico':    return 'rgba(248,81,73,0.92)';
+      case 'sospechoso': return 'rgba(210,153,34,0.92)';
+      default:           return 'rgba(63,185,80,0.92)';
+    }
+  }
+
+  labelNivel(): string {
+    switch (this.nivel()) {
+      case 'critico':    return 'CRÍTICO';
+      case 'sospechoso': return 'SOSPECHOSO';
+      default:           return 'NORMAL';
+    }
   }
 
   // ── URL del stream MJPEG (token en query param para <img>) ──

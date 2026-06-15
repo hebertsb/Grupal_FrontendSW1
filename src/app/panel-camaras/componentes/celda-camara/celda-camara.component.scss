@@ -120,6 +120,24 @@
   font-weight: 700;
 }
 
+.celda__nivel-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.4px;
+  transition: background 0.4s;
+  .material-icons { font-size: 10px; }
+
+  &--pulso {
+    animation: parpadeoSuave 1.2s infinite;
+  }
+}
+
 /* ── Badges (LIVE / IA) ── */
 .celda__badge {
   position: absolute;

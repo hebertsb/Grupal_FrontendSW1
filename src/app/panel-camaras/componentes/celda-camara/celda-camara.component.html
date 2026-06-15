@@ -169,7 +169,15 @@
   <div class="celda__hud">
     <span class="celda__nombre">{{ camara.nombre_ubicacion }}</span>
     <div class="celda__hud-derecha">
-      @if (modo() === 'archivo' && detecciones().length > 0) {
+      @if (nivel()) {
+        <span class="celda__nivel-badge"
+              [style.background]="colorNivel()"
+              [class.celda__nivel-badge--pulso]="nivel() === 'critico'">
+          <span class="material-icons" style="font-size:10px">group</span>
+          {{ conteoPersonas() }}&nbsp;·&nbsp;{{ labelNivel() }}
+        </span>
+      }
+      @if (modo() === 'archivo' && detecciones().length > 0 && !nivel()) {
         <span class="celda__detec-count">{{ detecciones().length }} obj.</span>
       }
       <span class="celda__hora">{{ horaActual() | date:'HH:mm:ss' }}</span>
