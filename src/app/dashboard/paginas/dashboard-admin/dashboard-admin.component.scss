@@ -100,3 +100,48 @@
   font-size: 11px;
   font-weight: 700;
 }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 14px;
+    gap: 10px;
+    &__icono { font-size: 28px; }
+    &__valor  { font-size: 24px; }
+  }
+
+  .accesos-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .acceso-card {
+    padding: 12px 8px;
+    font-size: 11px;
+    gap: 6px;
+    .material-icons { font-size: 22px; }
+  }
+
+  .tabla-card {
+    overflow-x: auto;
+  }
+
+  .tabla {
+    min-width: 500px;
+    th, td { padding: 8px 10px; }
+  }
+
+  .seccion-titulo { font-size: 14px; margin-bottom: 10px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .accesos-grid { grid-template-columns: repeat(2, 1fr); }
+}

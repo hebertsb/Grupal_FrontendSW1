@@ -1,4 +1,4 @@
-<app-cabecera titulo="Plano del Condominio" subtitulo="Rueda para zoom · Arrastrar para mover · Click para colocar cámara" />
+<app-cabecera titulo="Plano del Condominio" subtitulo="Rueda para zoom · Arrastrar para mover · Click en pin para ver zona" />
 
 <div class="plano-page">
 
@@ -87,39 +87,47 @@
           <!-- Inner wrapper: recibe el transform CSS -->
           <div class="plano-inner" #innerWrapper>
             <img class="plano-img"
+                 #imgPlano
                  [src]="plano()!.imagen_url"
                  alt="Plano"
                  (load)="onImageLoad()"
                  draggable="false" />
 
-            <!-- SVG overlay: viewBox 0-100 mapeado al tamaño real de imagen -->
-            <svg class="plano-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <!-- SVG overlay: viewBox = dimensiones reales de imagen → pines sin distorsión -->
+            <svg class="plano-svg" [attr.viewBox]="svgViewBox" preserveAspectRatio="none">
               @for (pos of posiciones(); track pos.camaraId) {
                 <g [attr.transform]="'translate(' + svgX(pos.pos_x) + ',' + svgY(pos.pos_y) + ')'">
                   <!-- Sombra -->
-                  <ellipse cx="0.6" cy="1.8" rx="4.5" ry="1.5" fill="rgba(0,0,0,0.3)" />
-                  <!-- Cola triángulo -->
-                  <polygon points="-2.8,-3.5 2.8,-3.5 0,1.5"
+                  <ellipse cx="0" [attr.cy]="ps().scy" [attr.rx]="ps().srx" [attr.ry]="ps().sry"
+                           fill="rgba(0,0,0,0.28)" />
+                  <!-- Cola triangular -->
+                  <polygon [attr.points]="ps().tail"
                            [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))" />
                   <!-- Círculo del pin -->
-                  <circle cx="0" cy="-10" r="7.5"
+                  <circle cx="0" [attr.cy]="ps().cy" [attr.r]="ps().r"
                           [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))"
-                          stroke="white" stroke-width="0.9" />
-                  <!-- Cuerpo cámara (blanco) -->
-                  <rect x="-4.2" y="-13.5" width="8.4" height="6" rx="1.1" fill="white"/>
+                          stroke="white" [attr.stroke-width]="ps().sw" />
+                  <!-- Cuerpo cámara -->
+                  <rect [attr.x]="ps().bx" [attr.y]="ps().by"
+                        [attr.width]="ps().bw" [attr.height]="ps().bh" rx="2" fill="white"/>
                   <!-- Visor -->
-                  <rect x="-2" y="-15.8" width="4" height="2.8" rx="0.8" fill="white"/>
+                  <rect [attr.x]="ps().vx" [attr.y]="ps().vy"
+                        [attr.width]="ps().vw" [attr.height]="ps().vh" rx="1.5" fill="white"/>
                   <!-- Lente -->
-                  <circle cx="0" cy="-10.5" r="2.6"
+                  <circle cx="0" [attr.cy]="ps().lcy" [attr.r]="ps().lr"
                           [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))" />
-                  <circle cx="0" cy="-10.5" r="1.1" fill="rgba(0,0,0,0.4)"/>
+                  <circle cx="0" [attr.cy]="ps().lcy" [attr.r]="ps().li"
+                          fill="rgba(0,0,0,0.4)"/>
                   <!-- Flash -->
-                  <circle cx="3.4" cy="-13" r="1" fill="white" opacity="0.75"/>
+                  <circle [attr.cx]="ps().fx" [attr.cy]="ps().fy" [attr.r]="ps().fr"
+                          fill="white" opacity="0.75"/>
                   <!-- Etiqueta -->
-                  <rect x="-13" y="3.5" width="26" height="6" rx="1.4"
+                  <rect [attr.x]="ps().lx" [attr.y]="ps().ly"
+                        [attr.width]="ps().lw" [attr.height]="ps().lh" [attr.rx]="ps().lrx"
                         [attr.fill]="colorCamara(indiceGlobal(pos.camaraId))"
                         opacity="0.92"/>
-                  <text x="0" y="8" font-size="3" font-family="sans-serif"
+                  <text x="0" [attr.y]="ps().ty"
+                        [attr.font-size]="ps().fs" font-family="sans-serif"
                         font-weight="700" text-anchor="middle" fill="white">
                     {{ labelCorto(pos.nombreCamara) }}
                   </text>
@@ -196,3 +204,89 @@
     </div>
   }
 </div>
+
+<!-- ── Modal zona cámara ── -->
+@if (modalAbierto()) {
+  <div class="zona-overlay" (click)="cerrarModal()">
+    <div class="zona-modal" (click)="$event.stopPropagation()">
+
+      <!-- Header con color de cámara -->
+      <div class="zona-modal__header"
+           [style.background]="colorCamara(indiceGlobal(modalPos()!.camaraId))">
+        <span class="material-icons" style="font-size:20px">videocam</span>
+        <span class="zona-modal__camname">{{ modalPos()!.nombreCamara }}</span>
+        @if (imagenesZona().length > 0) {
+          <span class="zona-modal__imgcount">{{ imagenZonaIdx() + 1 }} / {{ imagenesZona().length }}</span>
+        }
+        <button class="zona-modal__close" (click)="cerrarModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <!-- Cuerpo imagen -->
+      <div class="zona-modal__body">
+        @if (cargandoModal()) {
+          <div class="zona-modal__empty">
+            <span class="material-icons spin" style="font-size:36px">sync</span>
+          </div>
+        } @else if (imagenesZona().length === 0) {
+          <div class="zona-modal__empty">
+            <span class="material-icons" style="font-size:52px;opacity:.35">image_not_supported</span>
+            <p>Sin imágenes de zona</p>
+            <p class="zona-modal__hint">Sube fotos de esta área con el botón de abajo</p>
+          </div>
+        } @else {
+          <img class="zona-modal__img"
+               [src]="imagenesZona()[imagenZonaIdx()].imagen_url"
+               alt="Zona {{ modalPos()!.nombreCamara }}" />
+          @if (imagenesZona().length > 1) {
+            <button class="zona-modal__nav zona-modal__nav--prev"
+                    [disabled]="imagenZonaIdx() === 0"
+                    (click)="prevImagen()">
+              <span class="material-icons">chevron_left</span>
+            </button>
+            <button class="zona-modal__nav zona-modal__nav--next"
+                    [disabled]="imagenZonaIdx() === imagenesZona().length - 1"
+                    (click)="nextImagen()">
+              <span class="material-icons">chevron_right</span>
+            </button>
+          }
+        }
+      </div>
+
+      <!-- Dots navegación -->
+      @if (imagenesZona().length > 1) {
+        <div class="zona-modal__dots">
+          @for (img of imagenesZona(); track img.imagen_id; let i = $index) {
+            <button class="zona-modal__dot"
+                    [class.activo]="i === imagenZonaIdx()"
+                    (click)="imagenZonaIdx.set(i)"></button>
+          }
+        </div>
+      }
+
+      <!-- Footer acciones -->
+      <div class="zona-modal__footer">
+        @if (imagenesZona().length < 10) {
+          <label class="zona-btn-upload" [class.zona-btn-upload--busy]="subiendoZona()">
+            @if (subiendoZona()) {
+              <span class="material-icons spin">sync</span> Subiendo…
+            } @else {
+              <span class="material-icons">add_photo_alternate</span>
+              {{ imagenesZona().length === 0 ? 'Agregar imagen de zona' : 'Agregar otra imagen' }}
+            }
+            <input type="file" accept=".jpg,.jpeg,.png"
+                   (change)="onZonaFileSelect($event)" style="display:none" />
+          </label>
+        }
+        @if (imagenesZona().length > 0) {
+          <button class="zona-btn-del" (click)="eliminarImagenZonaActual()"
+                  title="Eliminar imagen actual">
+            <span class="material-icons">delete_outline</span>
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}

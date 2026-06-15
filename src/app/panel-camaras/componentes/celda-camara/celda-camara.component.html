@@ -25,17 +25,24 @@
         <span class="material-icons estado-icono">videocam_off</span>
         <span>Sin señal</span>
         <span class="celda__rtsp">{{ camara.rtsp_url }}</span>
-        <button class="btn-file" (click)="abrirSelector()">
-          <span class="material-icons">upload_file</span> Subir video / imagen
-        </button>
+        <div class="celda__acciones-error">
+          <button class="btn-retry" (click)="reintentar($event)">
+            <span class="material-icons">refresh</span> Reintentar
+          </button>
+          <button class="btn-file" (click)="abrirSelectorConStop($event)">
+            <span class="material-icons">upload_file</span> Subir archivo
+          </button>
+        </div>
       </div>
     }
-    <img class="celda__media"
-         [src]="streamUrl()"
-         [class.celda__media--oculta]="cargando() || errorStream()"
-         (load)="alCargar()"
-         (error)="alError()"
-         alt="CAM {{ camara.camara_id }}" />
+    @if (!errorStream()) {
+      <img class="celda__media"
+           [src]="streamUrl()"
+           [class.celda__media--oculta]="cargando()"
+           (load)="alCargar()"
+           (error)="alError()"
+           alt="CAM {{ camara.camara_id }}" />
+    }
 
     <!-- Overlay SVG: solo dot + etiqueta sobre cada persona detectada -->
     @if (detecciones().length > 0) {
@@ -183,7 +190,7 @@
 
   <!-- ── Botón subir archivo (esquina) cuando está en modo LIVE ── -->
   @if (modo() === 'live') {
-    <button class="btn-upload-corner" (click)="abrirSelector()" title="Subir video o imagen para análisis IA">
+    <button class="btn-upload-corner" (click)="abrirSelectorConStop($event)" title="Subir video o imagen para análisis IA">
       <span class="material-icons">upload</span>
     </button>
   }

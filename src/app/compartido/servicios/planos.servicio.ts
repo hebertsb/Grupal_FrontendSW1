@@ -2,13 +2,22 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { entorno } from '../../../environments/environment';
 
+export interface ImagenZona {
+  imagen_id?:  number;
+  posicion:    number;
+  imagen_url:  string;
+  orden:       number;
+  created_at?: string;
+}
+
 export interface PosicionCamara {
-  posicion_id?: number;
+  posicion_id?:  number;
   plano:         number;
   camara:        number;
   nombre_camara?: string;
   pos_x:         number;
   pos_y:         number;
+  imagenes_zona?: ImagenZona[];
 }
 
 export interface PlanoCondominio {
@@ -52,5 +61,26 @@ export class PlanosServicio {
 
   eliminarPosicion(planoId: number, camaraId: number) {
     return this.http.delete<void>(`${this.base}/${planoId}/posiciones/${camaraId}/`);
+  }
+
+  // ── Imágenes de zona ────────────────────────────────────────────────────────
+
+  listarImagenesZona(planoId: number, camaraId: number) {
+    return this.http.get<ImagenZona[]>(
+      `${this.base}/${planoId}/posiciones/${camaraId}/imagenes/`
+    );
+  }
+
+  subirImagenZona(planoId: number, camaraId: number, form: FormData) {
+    return this.http.post<ImagenZona>(
+      `${this.base}/${planoId}/posiciones/${camaraId}/imagenes/`,
+      form
+    );
+  }
+
+  eliminarImagenZona(planoId: number, camaraId: number, imagenId: number) {
+    return this.http.delete<void>(
+      `${this.base}/${planoId}/posiciones/${camaraId}/imagenes/${imagenId}/`
+    );
   }
 }

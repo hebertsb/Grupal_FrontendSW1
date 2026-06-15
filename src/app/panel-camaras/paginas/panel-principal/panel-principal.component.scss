@@ -100,3 +100,57 @@ app-cabecera            { grid-area: cabecera; }
   margin-left: 10px;
   vertical-align: middle;
 }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .panel-principal {
+    grid-template-columns: 1fr;
+    grid-template-rows: 46px 44px 1fr auto;
+    grid-template-areas:
+      "cabecera"
+      "herramientas"
+      "cuadricula"
+      "lista";
+  }
+
+  .lista-lateral {
+    max-height: 76px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    border-left: none;
+    border-top: 1px solid var(--borde);
+  }
+
+  .lista-lateral__item {
+    flex-direction: column;
+    min-width: 100px;
+    justify-content: center;
+    text-align: center;
+    padding: 5px 10px;
+    border-left: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+  }
+
+  .lista-lateral__item--activo {
+    border-left-color: transparent;
+    border-bottom-color: var(--primario);
+  }
+
+  .lista-lateral__nombre   { font-size: 10px; }
+  .lista-lateral__ubicacion { font-size: 9px; }
+
+  .barra-herramientas {
+    overflow-x: auto;
+    gap: 4px;
+    padding: 0 8px;
+    &__etiqueta { display: none; }
+  }
+}
+
+@media (max-width: 480px) {
+  .lista-lateral { max-height: 66px; }
+  .lista-lateral__item { min-width: 80px; padding: 4px 6px; }
+}

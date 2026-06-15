@@ -1,9 +1,9 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
-  inject, signal, ElementRef, ViewChild,
+  inject, signal, computed, ElementRef, ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PlanosServicio, PlanoCondominio } from '../../../compartido/servicios/planos.servicio';
+import { PlanosServicio, PlanoCondominio, ImagenZona } from '../../../compartido/servicios/planos.servicio';
 import { CamarasServicio } from '../../../compartido/servicios/camaras.servicio';
 import { CabeceraComponent } from '../../../compartido/componentes/cabecera/cabecera.component';
 import { Camara } from '../../../compartido/modelos/camara.modelo';
@@ -27,6 +27,7 @@ interface PosLocal {
 export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLDivElement>;
   @ViewChild('innerWrapper') innerWrapper!: ElementRef<HTMLDivElement>;
+  @ViewChild('imgPlano')     imgPlanoRef!:  ElementRef<HTMLImageElement>;
 
   private srv    = inject(PlanosServicio);
   private camSrv = inject(CamarasServicio);
@@ -43,6 +44,46 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
   readonly errorMsg      = signal('');
   readonly guardadoOk    = signal(false);
 
+  // ── Modal imágenes de zona ────────────────────────────────────────────────
+  readonly modalAbierto  = signal(false);
+  readonly modalPos      = signal<PosLocal | null>(null);
+  readonly imagenesZona  = signal<ImagenZona[]>([]);
+  readonly imagenZonaIdx = signal(0);
+  readonly cargandoModal = signal(false);
+  readonly subiendoZona  = signal(false);
+
+  // Dimensiones naturales de la imagen (para SVG viewBox correcto)
+  readonly imgNatW = signal(0);
+  readonly imgNatH = signal(0);
+
+  // Tamaños del pin calculados en píxeles reales de la imagen
+  // r ≈ 1.8% del ancho de la imagen → pin visible pero no gigante
+  readonly ps = computed(() => {
+    const r  = Math.max(12, this.imgNatW() * 0.025);
+    const cy = -r * 1.5;                 // centro del círculo (sobre el tip)
+    return {
+      r, cy,
+      // cola triangular
+      tail: `${-r * 0.38},${cy + r} ${r * 0.38},${cy + r} 0,0`,
+      // cuerpo de la cámara (rect blanco dentro del círculo)
+      bx: -r * 0.55, by: cy - r * 0.45, bw: r * 1.1, bh: r * 0.78,
+      // visor superior
+      vx: -r * 0.25, vy: cy - r * 0.45 - r * 0.35, vw: r * 0.5, vh: r * 0.32,
+      // lente
+      lcy: cy - r * 0.07, lr: r * 0.32, li: r * 0.14,
+      // flash
+      fx: r * 0.44, fy: cy - r * 0.37, fr: r * 0.12,
+      // stroke
+      sw: r * 0.11,
+      // sombra
+      scy: r * 0.22, srx: r * 0.55, sry: r * 0.18,
+      // etiqueta
+      lx: -r * 2.6, ly: r * 0.28, lw: r * 5.2, lh: r * 1.55, lrx: r * 0.2,
+      // texto
+      ty: r * 0.28 + r * 1.12, fs: r * 0.88,
+    };
+  });
+
   // ── Zoom / Pan (propiedades públicas para uso en template) ──────────────────
   isDragging = false;
 
@@ -55,10 +96,22 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
   private _dragStartTX = 0;
   private _dragStartTY = 0;
 
-  private _wheelHandler!:     (e: WheelEvent) => void;
-  private _mouseMoveHandler!: (e: MouseEvent) => void;
-  private _mouseUpHandler!:   (e: MouseEvent) => void;
-  private _wheelAttached      = false;
+  private _wheelHandler!:      (e: WheelEvent) => void;
+  private _mouseMoveHandler!:  (e: MouseEvent) => void;
+  private _mouseUpHandler!:    (e: MouseEvent) => void;
+  private _touchStartHandler!: (e: TouchEvent) => void;
+  private _touchMoveHandler!:  (e: TouchEvent) => void;
+  private _touchEndHandler!:   (e: TouchEvent) => void;
+  private _wheelAttached       = false;
+
+  // Estado para pinch-to-zoom táctil
+  private _pinchDist0  = 0;
+  private _pinchScale0 = 1;
+  private _touchPanX0  = 0;
+  private _touchPanY0  = 0;
+  private _touchTX0    = 0;
+  private _touchTY0    = 0;
+  private _isTouching  = false;
 
   ngOnInit() {
     this.camSrv.listar().subscribe(lista => this.camaras.set(lista));
@@ -83,9 +136,12 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   ngAfterViewInit() {
-    this._wheelHandler     = (e: WheelEvent) => this._onWheel(e);
-    this._mouseMoveHandler = (e: MouseEvent) => this._onMouseMove(e);
-    this._mouseUpHandler   = (e: MouseEvent) => this._onMouseUp(e);
+    this._wheelHandler      = (e: WheelEvent) => this._onWheel(e);
+    this._mouseMoveHandler  = (e: MouseEvent) => this._onMouseMove(e);
+    this._mouseUpHandler    = (e: MouseEvent) => this._onMouseUp(e);
+    this._touchStartHandler = (e: TouchEvent) => this._onTouchStart(e);
+    this._touchMoveHandler  = (e: TouchEvent) => this._onTouchMove(e);
+    this._touchEndHandler   = (e: TouchEvent) => this._onTouchEnd(e);
     document.addEventListener('mousemove', this._mouseMoveHandler);
     document.addEventListener('mouseup',   this._mouseUpHandler);
   }
@@ -94,13 +150,19 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
     document.removeEventListener('mousemove', this._mouseMoveHandler);
     document.removeEventListener('mouseup',   this._mouseUpHandler);
     this._detachWheel();
+    this._detachTouch();
   }
 
   // ── Imagen cargada ────────────────────────────────────────────────────────
 
   onImageLoad() {
+    const img = this.imgPlanoRef?.nativeElement;
+    if (img) {
+      this.imgNatW.set(img.naturalWidth);
+      this.imgNatH.set(img.naturalHeight);
+    }
     this._attachWheel();
-    // requestAnimationFrame asegura que el DOM tiene dimensiones reales
+    this._attachTouch();
     requestAnimationFrame(() => this.fitToContainer());
   }
 
@@ -116,6 +178,97 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
     if (cont && this._wheelAttached) {
       cont.removeEventListener('wheel', this._wheelHandler);
       this._wheelAttached = false;
+    }
+  }
+
+  private _attachTouch() {
+    const cont = this.containerRef?.nativeElement;
+    if (!cont) return;
+    cont.addEventListener('touchstart', this._touchStartHandler, { passive: false });
+    cont.addEventListener('touchmove',  this._touchMoveHandler,  { passive: false });
+    cont.addEventListener('touchend',   this._touchEndHandler,   { passive: false });
+  }
+
+  private _detachTouch() {
+    const cont = this.containerRef?.nativeElement;
+    if (!cont) return;
+    cont.removeEventListener('touchstart', this._touchStartHandler);
+    cont.removeEventListener('touchmove',  this._touchMoveHandler);
+    cont.removeEventListener('touchend',   this._touchEndHandler);
+  }
+
+  private _pinchDistance(t: TouchList): number {
+    const dx = t[1].clientX - t[0].clientX;
+    const dy = t[1].clientY - t[0].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  private _onTouchStart(e: TouchEvent) {
+    e.preventDefault();
+    this._isTouching = true;
+    if (e.touches.length === 1) {
+      this._dragStartX  = e.touches[0].clientX;
+      this._dragStartY  = e.touches[0].clientY;
+      this._dragStartTX = this._tx;
+      this._dragStartTY = this._ty;
+      this._dragMoved   = false;
+    } else if (e.touches.length === 2) {
+      this._pinchDist0  = this._pinchDistance(e.touches);
+      this._pinchScale0 = this._scale;
+      // Centro del pinch
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const cont = this.containerRef?.nativeElement;
+      if (cont) {
+        const rect = cont.getBoundingClientRect();
+        this._touchPanX0 = mx - rect.left;
+        this._touchPanY0 = my - rect.top;
+        this._touchTX0   = this._tx;
+        this._touchTY0   = this._ty;
+      }
+    }
+  }
+
+  private _onTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    if (e.touches.length === 1 && this._isTouching) {
+      const dx = e.touches[0].clientX - this._dragStartX;
+      const dy = e.touches[0].clientY - this._dragStartY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        this._dragMoved = true;
+        this._tx = this._dragStartTX + dx;
+        this._ty = this._dragStartTY + dy;
+        this._applyTransform();
+      }
+    } else if (e.touches.length === 2) {
+      const dist  = this._pinchDistance(e.touches);
+      const ratio = dist / this._pinchDist0;
+      const newScale = Math.min(Math.max(this._pinchScale0 * ratio, 0.1), 15);
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const cont = this.containerRef?.nativeElement;
+      if (cont) {
+        const rect = cont.getBoundingClientRect();
+        const cx = mx - rect.left;
+        const cy = my - rect.top;
+        this._tx = cx - (this._touchPanX0 - this._touchTX0) - (this._touchPanX0 * newScale / this._pinchScale0);
+        this._ty = cy - (this._touchPanY0 - this._touchTY0) - (this._touchPanY0 * newScale / this._pinchScale0);
+        this._scale = newScale;
+        this._applyTransform();
+      }
+    }
+  }
+
+  private _onTouchEnd(e: TouchEvent) {
+    if (e.touches.length === 0) {
+      if (!this._dragMoved && this._isTouching) {
+        // Tap simple → simular click
+        const lastTouch = e.changedTouches[0];
+        const fakeClick = { clientX: lastTouch.clientX, clientY: lastTouch.clientY, button: 0 } as MouseEvent;
+        this._handleClick(fakeClick);
+      }
+      this._isTouching = false;
+      this._dragMoved  = false;
     }
   }
 
@@ -185,7 +338,11 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
     }
 
     const selec = this.camaraSelec();
-    if (!selec) return;
+    if (!selec) {
+      const cerca = this._encontrarCercana(pos_x, pos_y);
+      if (cerca) this._abrirModal(cerca, plano.plano_id);
+      return;
+    }
 
     const existe = this.posiciones().find(p => p.camaraId === selec.camara_id);
     if (existe) {
@@ -240,10 +397,14 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
     inner.style.transform = `translate(${this._tx}px,${this._ty}px) scale(${this._scale})`;
   }
 
-  // ── Coordenadas SVG ───────────────────────────────────────────────────────
+  // ── Coordenadas SVG (en píxeles reales de la imagen) ─────────────────────
 
-  svgX(pos_x: number) { return pos_x * 100; }
-  svgY(pos_y: number) { return pos_y * 100; }
+  svgX(pos_x: number) { return pos_x * this.imgNatW(); }
+  svgY(pos_y: number) { return pos_y * this.imgNatH(); }
+
+  get svgViewBox(): string {
+    return `0 0 ${this.imgNatW()} ${this.imgNatH()}`;
+  }
 
   // ── Cámaras ───────────────────────────────────────────────────────────────
 
@@ -320,6 +481,66 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
     if (!plano?.plano_id || !confirm(`¿Eliminar el plano "${plano.nombre}"?`)) return;
     this.srv.eliminar(plano.plano_id).subscribe({
       next: () => { this.plano.set(null); this.posiciones.set([]); this._wheelAttached = false; },
+    });
+  }
+
+  // ── Modal zona ───────────────────────────────────────────────────────────
+
+  private _abrirModal(pos: PosLocal, planoId: number) {
+    this.modalPos.set(pos);
+    this.imagenZonaIdx.set(0);
+    this.imagenesZona.set([]);
+    this.modalAbierto.set(true);
+    this.cargandoModal.set(true);
+    this.srv.listarImagenesZona(planoId, pos.camaraId).subscribe({
+      next: imgs => { this.imagenesZona.set(imgs); this.cargandoModal.set(false); },
+      error: ()  => { this.cargandoModal.set(false); },
+    });
+  }
+
+  cerrarModal() { this.modalAbierto.set(false); this.modalPos.set(null); }
+
+  prevImagen() { this.imagenZonaIdx.update(i => Math.max(0, i - 1)); }
+  nextImagen() { this.imagenZonaIdx.update(i => Math.min(this.imagenesZona().length - 1, i + 1)); }
+
+  onZonaFileSelect(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    const file  = input.files?.[0];
+    input.value = '';
+    const pos   = this.modalPos();
+    const plano = this.plano();
+    if (!file || !pos || !plano?.plano_id) return;
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!['jpg', 'jpeg', 'png'].includes(ext)) { this.errorMsg.set('Solo JPG/JPEG/PNG'); return; }
+    if (this.imagenesZona().length >= 10) return;
+
+    this.subiendoZona.set(true);
+    const fd = new FormData();
+    fd.append('imagen', file);
+    this.srv.subirImagenZona(plano.plano_id, pos.camaraId, fd).subscribe({
+      next: img => {
+        this.imagenesZona.update(list => [...list, img]);
+        this.imagenZonaIdx.set(this.imagenesZona().length - 1);
+        this.subiendoZona.set(false);
+      },
+      error: () => { this.errorMsg.set('Error al subir imagen de zona'); this.subiendoZona.set(false); },
+    });
+  }
+
+  eliminarImagenZonaActual() {
+    const imgs  = this.imagenesZona();
+    const idx   = this.imagenZonaIdx();
+    const img   = imgs[idx];
+    const pos   = this.modalPos();
+    const plano = this.plano();
+    if (!img?.imagen_id || !pos || !plano?.plano_id) return;
+
+    this.srv.eliminarImagenZona(plano.plano_id, pos.camaraId, img.imagen_id).subscribe({
+      next: () => {
+        const nuevas = imgs.filter((_, i) => i !== idx);
+        this.imagenesZona.set(nuevas);
+        this.imagenZonaIdx.set(Math.min(idx, Math.max(0, nuevas.length - 1)));
+      },
     });
   }
 

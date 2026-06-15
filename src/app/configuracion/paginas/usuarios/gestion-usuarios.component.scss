@@ -91,3 +91,19 @@
   color: var(--texto-2); font-size: 14px; cursor: pointer; transition: background .15s;
   &:hover { background: var(--borde); color: var(--texto); }
 }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .pagina-contenido { padding: 14px; }
+
+  .tabla-simple { min-width: 500px; }
+
+  .modal { max-width: 94vw; }
+
+  .boton-nuevo { font-size: 12px; padding: 5px 10px; }
+}
+
+@media (max-width: 480px) {
+  .pagina-contenido { padding: 10px; }
+  .tabla-simple { th, td { padding: 7px 8px; font-size: 11px; } }
+}

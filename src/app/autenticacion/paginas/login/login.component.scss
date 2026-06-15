@@ -355,3 +355,33 @@
     &::placeholder   { color: var(--texto-2); opacity: .6; }
   }
 }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .login-pagina { flex-direction: column; }
+
+  .hero-panel { flex: none; height: 200px; }
+
+  .hero-estado { padding: 20px; }
+  .hero-logo { width: 56px; height: 56px; margin-bottom: 8px; }
+  .hero-titulo { font-size: 34px; letter-spacing: 2px; }
+  .hero-slogan { margin-bottom: 0; }
+  .hero-desc, .hero-features, .hero-cta { display: none; }
+
+  .hero-estado--planes { .planes-lista { flex-direction: column; gap: 8px; } }
+
+  .form-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--borde);
+    padding: 32px 24px;
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-panel { height: 160px; }
+  .hero-titulo { font-size: 28px; }
+  .form-panel { padding: 24px 16px; }
+  .form-header h2 { font-size: 18px; }
+}

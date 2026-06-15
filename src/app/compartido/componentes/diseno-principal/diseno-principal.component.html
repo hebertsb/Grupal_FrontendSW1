@@ -1,5 +1,19 @@
-<div class="diseno-principal">
-  <app-barra-lateral />
+<div class="diseno-principal" [class.sidebar-open]="sidebarAbierto()">
+
+  <!-- Overlay móvil que cierra el sidebar -->
+  <div class="mob-overlay" (click)="cerrarSidebar()"></div>
+
+  <!-- Top bar móvil -->
+  <header class="mob-topbar">
+    <button class="mob-hamburger" (click)="toggleSidebar()">
+      <span class="material-icons">{{ sidebarAbierto() ? 'close' : 'menu' }}</span>
+    </button>
+    <img src="assets/logo.png" class="mob-logo" alt="SIVIC" />
+    <span class="mob-marca">SIVIC</span>
+  </header>
+
+  <app-barra-lateral [abierto]="sidebarAbierto()" (cerrar)="cerrarSidebar()" />
+
   <div class="diseno-principal__contenido">
     <router-outlet />
   </div>

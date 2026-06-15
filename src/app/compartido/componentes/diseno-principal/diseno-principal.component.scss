@@ -11,3 +11,70 @@
     background: var(--fondo);
   }
 }
+
+// ── Mobile topbar (oculto en desktop) ────────────────────────────────────────
+.mob-topbar {
+  display: none;
+}
+
+.mob-overlay {
+  display: none;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .diseno-principal {
+    flex-direction: column;
+
+    &__contenido {
+      margin-top: 56px;
+    }
+  }
+
+  // Topbar móvil fijo en la parte superior
+  .mob-topbar {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--superficie);
+    border-bottom: 1px solid var(--borde);
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    z-index: 200;
+  }
+
+  .mob-hamburger {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    background: none; border: none;
+    color: var(--texto); cursor: pointer; border-radius: 8px;
+    .material-icons { font-size: 24px; }
+    &:hover { background: var(--superficie-2); }
+  }
+
+  .mob-logo {
+    width: 32px; height: 32px; border-radius: 8px;
+  }
+
+  .mob-marca {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px; font-weight: 700; font-style: italic;
+    color: var(--primario); letter-spacing: 1px;
+  }
+
+  // Overlay que oscurece el contenido cuando sidebar está abierto
+  .mob-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 299;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar-open .mob-overlay {
+    display: block;
+  }
+}

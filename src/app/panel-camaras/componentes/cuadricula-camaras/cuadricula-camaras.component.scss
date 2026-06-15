@@ -24,3 +24,17 @@
     p { font-size: 14px; }
   }
 }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .cuadricula-camaras {
+    &--4col { grid-template-columns: repeat(2, 1fr); }
+    &--3col { grid-template-columns: repeat(2, 1fr); }
+  }
+}
+
+@media (max-width: 480px) {
+  .cuadricula-camaras--4col,
+  .cuadricula-camaras--3col,
+  .cuadricula-camaras--2col { grid-template-columns: 1fr; }
+}

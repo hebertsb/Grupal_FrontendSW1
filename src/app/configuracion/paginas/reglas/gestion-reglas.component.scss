@@ -312,3 +312,27 @@
 }
 
 .texto-2 { color: var(--texto-2); }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .pagina-contenido { padding: 14px; gap: 14px; }
+
+  .toolbar { flex-wrap: wrap; gap: 8px; }
+
+  .campo-busqueda { max-width: 100%; }
+
+  .reglas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+
+  .modal { min-width: unset; width: min(94vw, 460px); padding: 20px; gap: 12px; }
+
+  .boton-primario { font-size: 12px; padding: 8px 12px; }
+}
+
+@media (max-width: 480px) {
+  .pagina-contenido { padding: 10px; }
+  .reglas-grid { grid-template-columns: 1fr; }
+  .regla-card { padding: 14px; }
+}

@@ -17,36 +17,19 @@
   border-bottom: 1px solid var(--borde);
 
   &__icono {
-    width: 46px;
-    height: 46px;
-    border-radius: 10px;
-    flex-shrink: 0;
+    width: 46px; height: 46px;
+    border-radius: 10px; flex-shrink: 0;
     filter: drop-shadow(0 0 8px rgba(31,111,235,.4));
   }
-
-  &__marca {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
+  &__marca { display: flex; flex-direction: column; gap: 2px; }
   &__texto {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 20px;
-    font-weight: 700;
-    font-style: italic;
-    letter-spacing: 1px;
-    color: var(--primario);
-    line-height: 1.1;
+    font-size: 20px; font-weight: 700; font-style: italic;
+    letter-spacing: 1px; color: var(--primario); line-height: 1.1;
   }
-
   &__slogan {
-    font-size: 8.5px;
-    font-weight: 500;
-    color: var(--texto-2);
-    text-transform: uppercase;
-    letter-spacing: .8px;
-    line-height: 1;
+    font-size: 8.5px; font-weight: 500; color: var(--texto-2);
+    text-transform: uppercase; letter-spacing: .8px; line-height: 1;
   }
 }
 
@@ -94,4 +77,33 @@
   &__info  { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   &__nombre { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   &__rol    { font-size: 11px; color: var(--texto-2); text-transform: capitalize; }
+}
+
+// ── Responsive: drawer en móvil ───────────────────────────────────────────────
+@media (max-width: 768px) {
+  .barra-lateral {
+    position: fixed;
+    top: 56px;    // debajo del topbar móvil
+    left: 0;
+    bottom: 0;
+    z-index: 300;
+    min-height: auto;
+    width: min(280px, 85vw);
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: none;
+
+    &--abierta {
+      transform: translateX(0);
+      box-shadow: 4px 0 24px rgba(0,0,0,.35);
+    }
+  }
+
+  .logo {
+    padding: 16px 14px;
+    &__icono { width: 38px; height: 38px; }
+    &__texto { font-size: 17px; }
+  }
+
+  .nav-item { padding: 12px 14px; font-size: 15px; }
 }

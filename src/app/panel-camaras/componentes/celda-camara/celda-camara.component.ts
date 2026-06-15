@@ -28,6 +28,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly modo        = signal<'live' | 'archivo'>('live');
   readonly cargando    = signal(true);
   readonly errorStream = signal(false);
+  private  _retrySeed  = signal(0);
   readonly horaActual  = signal(new Date());
   readonly arrastrando = signal(false);
   readonly archivoUrl  = signal<string | null>(null);
@@ -88,11 +89,24 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   // ── URL del stream MJPEG (token en query param para <img>) ──
   streamUrl(): string {
     const token = this.auth.obtenerToken() ?? '';
-    return `${entorno.apiUrl}/camaras/${this.camara.camara_id}/stream/?token=${encodeURIComponent(token)}`;
+    const seed  = this._retrySeed();
+    return `${entorno.apiUrl}/camaras/${this.camara.camara_id}/stream/?token=${encodeURIComponent(token)}&_r=${seed}`;
   }
 
   alCargar()  { this.cargando.set(false); this.errorStream.set(false); this._iniciarIaViva(); }
   alError()   { this.cargando.set(false); this.errorStream.set(true);  this._detenerIaViva(); }
+
+  reintentar(ev: Event) {
+    ev.stopPropagation();
+    this.cargando.set(true);
+    this.errorStream.set(false);
+    this._retrySeed.update(n => n + 1);
+  }
+
+  abrirSelectorConStop(ev: Event) {
+    ev.stopPropagation();
+    this.abrirSelector();
+  }
 
   // ── Drag & Drop ──
   onDragOver(ev: DragEvent)  { ev.preventDefault(); this.arrastrando.set(true);  }

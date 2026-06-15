@@ -228,6 +228,32 @@
   &:hover { background: rgba(31,111,235,0.8); color: white; }
 }
 
+/* ── Acciones en estado sin señal ── */
+.celda__acciones-error {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-retry {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #3a3a3a;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 7px;
+  padding: 6px 13px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+
+  .material-icons { font-size: 15px; }
+  &:hover { background: #4a4a4a; color: white; }
+}
+
 /* ── Botón subir (modo sin señal) ── */
 .btn-file {
   display: flex;
@@ -241,7 +267,6 @@
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 6px;
 
   .material-icons { font-size: 15px; }
   &:hover { opacity: 0.85; }

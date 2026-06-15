@@ -4,8 +4,59 @@
   </div>
 
   <div class="cabecera__acciones">
-    <button class="boton-icono" (click)="alternarTema()" [title]="temaActual() === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+
+    <!-- Campana de notificaciones -->
+    <div class="campana-wrap">
+      <button class="boton-icono campana-btn" (click)="toggleDropdown()" title="Notificaciones">
+        <span class="material-icons">notifications</span>
+        @if (notif.noLeidas() > 0) {
+          <span class="campana-badge">{{ notif.noLeidas() > 9 ? '9+' : notif.noLeidas() }}</span>
+        }
+      </button>
+
+      @if (dropdownAbierto()) {
+        <div class="notif-dropdown">
+          <div class="notif-dropdown__cabeza">
+            <span class="notif-dropdown__titulo">Alertas en tiempo real</span>
+            @if (notif.noLeidas() > 0) {
+              <button class="notif-dropdown__leer-todo" (click)="limpiarTodas()">
+                Marcar todo leído
+              </button>
+            }
+          </div>
+
+          <div class="notif-dropdown__lista">
+            @if (notif.alertas().length === 0) {
+              <div class="notif-vacio">
+                <span class="material-icons">notifications_none</span>
+                <p>Sin alertas recientes</p>
+              </div>
+            }
+            @for (a of notif.alertas(); track a.evento_id) {
+              <a class="notif-item" [class.notif-item--nueva]="!a.leida"
+                 routerLink="/alertas" (click)="abrirAlerta(a)">
+                <span class="notif-item__dot" [class.notif-item__dot--activo]="!a.leida"></span>
+                <div class="notif-item__info">
+                  <span class="notif-item__regla">{{ a.regla_nombre }}</span>
+                  <span class="notif-item__camara">{{ a.camara_nombre }}</span>
+                  <span class="notif-item__hora">{{ a.timestamp | date:'HH:mm:ss':'-0400' }}</span>
+                </div>
+                <span class="notif-item__conf"
+                      [class.notif-item__conf--alta]="a.confianza_ia >= 0.8">
+                  {{ (a.confianza_ia * 100).toFixed(0) }}%
+                </span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Tema -->
+    <button class="boton-icono" (click)="alternarTema()"
+            [title]="temaActual() === 'oscuro' ? 'Modo claro' : 'Modo oscuro'">
       <span class="material-icons">{{ temaActual() === 'oscuro' ? 'light_mode' : 'dark_mode' }}</span>
     </button>
+
   </div>
 </header>

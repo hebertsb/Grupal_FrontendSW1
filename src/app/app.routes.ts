@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { guardAutenticacion } from './nucleo/guardias/auth.guard';
+import { redirectPorRolGuard } from './nucleo/guardias/redirect-rol.guard';
 
 export const rutas: Routes = [
   {
@@ -13,8 +14,8 @@ export const rutas: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'guardia',
-        pathMatch: 'full',
+        canActivate: [redirectPorRolGuard],
+        loadComponent: () => import('./guardia/paginas/dashboard-guardia/dashboard-guardia.component').then(m => m.DashboardGuardiaComponent),
       },
       {
         path: 'dashboard',

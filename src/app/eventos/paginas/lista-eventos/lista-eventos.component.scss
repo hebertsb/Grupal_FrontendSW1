@@ -543,3 +543,25 @@
 
   &:hover { color: var(--texto); border-color: var(--texto); }
 }
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .barra-filtros { padding: 10px 14px; }
+
+  .tabla-eventos { min-width: 580px; }
+
+  .modal {
+    min-width: unset;
+    width: min(94vw, 460px);
+    padding: 20px;
+  }
+
+  .campo-fecha input { font-size: 11px; padding: 6px 8px; }
+}
+
+@media (max-width: 480px) {
+  .barra-filtros { padding: 8px 10px; gap: 6px; }
+  .tabla-eventos { font-size: 11px; th, td { padding: 7px 8px; } }
+  .chips-estado { gap: 4px; }
+  .chip { padding: 4px 10px; font-size: 11px; }
+}

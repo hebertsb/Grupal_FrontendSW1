@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { entorno } from '../../../environments/environment';
 import { CredencialesLogin, DatosRegistro, SesionUsuario, Usuario } from '../modelos/usuario.modelo';
+import { NotificacionesServicio } from './notificaciones.servicio';
 
 const CLAVE_TOKEN   = 'sivic_token';
 const CLAVE_USUARIO = 'sivic_usuario';
@@ -11,8 +12,13 @@ const CLAVE_USUARIO = 'sivic_usuario';
 @Injectable({ providedIn: 'root' })
 export class AutenticacionServicio {
   readonly usuarioActual = signal<Usuario | null>(this._cargarUsuario());
+  private notif = inject(NotificacionesServicio);
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) {
+    // Reconectar WS si ya hay sesión activa (recarga de página)
+    const token = this.obtenerToken();
+    if (token) this.notif.conectar(token);
+  }
 
   iniciarSesion(credenciales: CredencialesLogin) {
     return this.http.post<SesionUsuario>(`${entorno.apiUrl}/auth/login/`, credenciales).pipe(
@@ -20,6 +26,7 @@ export class AutenticacionServicio {
         localStorage.setItem(CLAVE_TOKEN, sesion.access);
         localStorage.setItem(CLAVE_USUARIO, JSON.stringify(sesion.usuario));
         this.usuarioActual.set(sesion.usuario);
+        this.notif.conectar(sesion.access);
       })
     );
   }
@@ -35,6 +42,7 @@ export class AutenticacionServicio {
   }
 
   cerrarSesion() {
+    this.notif.desconectar();
     localStorage.removeItem(CLAVE_TOKEN);
     localStorage.removeItem(CLAVE_USUARIO);
     this.usuarioActual.set(null);
