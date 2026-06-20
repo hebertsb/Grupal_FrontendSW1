@@ -228,3 +228,4 @@ Backend devuelve `"2026-06-13T18:45:00Z"` (UTC ISO 8601). Angular muestra en Bol
 ## Colaboradores
 
 - Hebert Suárez Burgos
+- Luis Fernando Blanco
