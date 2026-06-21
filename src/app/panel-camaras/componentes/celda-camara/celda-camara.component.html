@@ -78,7 +78,7 @@
                 [attr.y]="d.bbox.y * 100 + 8"
                 fill="white" font-size="2.8" font-family="sans-serif" font-weight="700"
                 text-anchor="middle">
-            {{ d.raza || ((d.confianza * 100).toFixed(0) + '%') }}
+            {{ (d.confianza * 100).toFixed(0) + '%' }}
           </text>
         }
       </svg>
@@ -89,7 +89,14 @@
       <div class="ia-resultado-overlay">
         @for (alerta of alertasModel(); track alerta) {
           <div class="ia-resultado-badge ia-resultado-badge--alerta">
-            <span class="material-icons">warning</span>
+            <span class="material-icons">{{
+              alerta === 'perro_sin_correa' ? 'pets' :
+              alerta === 'heces_detectadas' ? 'pest_control' :
+              alerta === 'personas_peleando' ? 'sports_mma' :
+              alerta === 'caida_persona' ? 'personal_injury' :
+              alerta === 'merodeo' ? 'directions_walk' :
+              (alerta.includes('vehiculo') ? 'directions_car' : 'warning')
+            }}</span>
             <span>{{ alerta === 'zona_restringida_persona' ? 'Zona Restringida' :
                      alerta === 'merodeo' ? 'Merodeo' :
                      alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
@@ -141,7 +148,7 @@
                 [attr.y]="d.bbox.y * 100 + 8"
                 fill="white" font-size="2.8" font-family="sans-serif" font-weight="700"
                 text-anchor="middle">
-            {{ d.raza || ((d.confianza * 100).toFixed(0) + '%') }}
+            {{ (d.confianza * 100).toFixed(0) + '%' }}
           </text>
         }
       </svg>
@@ -159,18 +166,19 @@
       </div>
     }
 
-    <!-- Alertas y Raza de la Mascota -->
-    @if (razaModel() || alertasModel().length > 0) {
+    <!-- Alertas -->
+    @if (alertasModel().length > 0) {
       <div class="ia-resultado-overlay">
-        @if (razaModel()) {
-          <div class="ia-resultado-badge ia-resultado-badge--raza" title="Raza de perro identificada por el clasificador ResNet">
-            <span class="material-icons">pets</span>
-            <span>{{ razaModel() }}</span>
-          </div>
-        }
         @for (alerta of alertasModel(); track alerta) {
           <div class="ia-resultado-badge ia-resultado-badge--alerta" title="Alerta de infracción de convivencia">
-            <span class="material-icons">warning</span>
+            <span class="material-icons">{{
+              alerta === 'perro_sin_correa' ? 'pets' :
+              alerta === 'heces_detectadas' ? 'pest_control' :
+              alerta === 'personas_peleando' ? 'sports_mma' :
+              alerta === 'caida_persona' ? 'personal_injury' :
+              alerta === 'merodeo' ? 'directions_walk' :
+              (alerta.includes('vehiculo') ? 'directions_car' : 'warning')
+            }}</span>
             <span>{{ alerta === 'perro_sin_correa' ? 'Mascota Suelta' :
                      alerta === 'heces_detectadas' ? 'Heces Detectadas' :
                      alerta === 'zona_restringida_persona' ? 'Zona Restringida' :

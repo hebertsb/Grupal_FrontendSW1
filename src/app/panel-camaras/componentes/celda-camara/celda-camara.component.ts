@@ -37,7 +37,6 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly analizando     = signal(false);
   readonly fps            = signal(0);
   readonly alertasModel   = signal<string[]>([]);
-  readonly razaModel      = signal<string | null>(null);
   readonly iaVivaActiva   = signal(false);
   readonly conteoPersonas = signal(0);
   readonly nivel          = signal<'normal' | 'sospechoso' | 'critico' | null>(null);
@@ -230,7 +229,8 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
         const dets = this._filtrarDets(r.detecciones ?? []);
         this.detecciones.set(dets);
         this.alertasModel.set(this._filtrarAlertas(r.alertas ?? []));
-        this.razaModel.set(null);
+        this.conteoPersonas.set(r.conteo_personas ?? dets.filter(d => d.clase === 'persona').length);
+        this.nivel.set(r.nivel ?? null);
         this.analizando.set(false);
       },
       error: () => this.analizando.set(false),
@@ -243,7 +243,6 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     const url = this.archivoUrl();
     if (url) URL.revokeObjectURL(url);
     this.archivoUrl.set(null);
-    this.razaModel.set(null);
     this.modo.set('live');
     this.cargando.set(true);
     this.errorStream.set(false);
@@ -253,7 +252,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     const mapa: Record<string, string> = {
       persona: '#f85149', person: '#f85149',
       vehiculo: '#d29922', car: '#d29922', vehicle: '#d29922',
-      mascota: '#3fb950',  dog: '#3fb950', cat: '#3fb950',
+      mascota: '#3fb950',  dog: '#3fb950', cat: '#3fb950', perro: '#3fb950',
       heces: '#8b5a2b', feces: '#8b5a2b', poop: '#8b5a2b',
     };
     return mapa[clase.toLowerCase()] ?? '#1f6feb';
