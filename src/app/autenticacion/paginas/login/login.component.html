@@ -31,9 +31,14 @@
       </p>
       <div class="planes-lista">
         @for (plan of planes; track plan.nombre) {
-          <div class="plan-card" [class.plan-card--destacado]="plan.destacado">
+          <div class="plan-card"
+               [class.plan-card--destacado]="plan.destacado"
+               [class.plan-card--seleccionado]="planSeleccionado()?.plan_id === plan.plan_id"
+               (click)="seleccionarPlan(plan)">
             @if (plan.destacado) { <span class="plan-badge">Popular</span> }
-            <div class="plan-card__icono">{{ plan.icono }}</div>
+            <div class="plan-card__icono">
+              <span class="material-icons">{{ plan.icono }}</span>
+            </div>
             <div class="plan-card__nombre">{{ plan.nombre }}</div>
             <div class="plan-card__precio">{{ plan.precio }}</div>
             <ul class="plan-card__features">
@@ -93,6 +98,8 @@
         <div class="form-error">{{ error() }}</div>
       }
       <form [formGroup]="formularioRegistro" (ngSubmit)="enviarRegistro()" class="form-body">
+
+        <p class="form-seccion">Datos del administrador</p>
         <div class="campo">
           <label class="campo__etiqueta">Nombre completo</label>
           <input class="campo__entrada" type="text"
@@ -101,23 +108,36 @@
         <div class="campo">
           <label class="campo__etiqueta">Correo electrónico</label>
           <input class="campo__entrada" type="email"
-                 formControlName="email" placeholder="juan@condominio.com" />
+                 formControlName="email" placeholder="juan@micondominio.com" />
         </div>
         <div class="campo">
           <label class="campo__etiqueta">Contraseña</label>
           <input class="campo__entrada" type="password"
                  formControlName="password" placeholder="Mínimo 8 caracteres" />
         </div>
+
+        <p class="form-seccion">Datos del condominio</p>
         <div class="campo">
-          <label class="campo__etiqueta">Rol</label>
-          <select class="campo__entrada" formControlName="rol">
-            <option value="guardia">Guardia</option>
-            <option value="admin">Administrador</option>
-          </select>
+          <label class="campo__etiqueta">Nombre del condominio</label>
+          <input class="campo__entrada" type="text"
+                 formControlName="nombre_condominio" placeholder="Ej: Residencial Los Pinos" />
         </div>
+        <div class="campo">
+          <label class="campo__etiqueta">Ubicación <span class="campo__opcional">(opcional)</span></label>
+          <input class="campo__entrada" type="text"
+                 formControlName="ubicacion" placeholder="Ej: Av. Principal 123" />
+        </div>
+
+        @if (planSeleccionado()) {
+          <div class="plan-seleccionado-resumen">
+            <span class="material-icons">check_circle</span>
+            Plan <strong>{{ planSeleccionado()!.nombre }}</strong> — {{ planSeleccionado()!.precio }}
+          </div>
+        }
+
         <button class="boton-primario" type="submit"
-                [disabled]="cargando() || formularioRegistro.invalid">
-          {{ cargando() ? 'Registrando…' : 'Crear cuenta' }}
+                [disabled]="cargando() || formularioRegistro.invalid || !planSeleccionado()">
+          {{ cargando() ? 'Procesando…' : 'Continuar con el pago →' }}
         </button>
       </form>
       <p class="form-alterno">

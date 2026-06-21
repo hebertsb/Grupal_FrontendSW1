@@ -1,0 +1,46 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">workspace_premium</span>
+    Planes de suscripción
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <h2 class="seccion-titulo">Planes disponibles</h2>
+
+    @if (cargando()) {
+      <p class="texto-2">Cargando planes…</p>
+    } @else {
+      <div class="planes-grid">
+        @for (p of planes(); track p.plan_id) {
+          <div class="plan-card">
+            <div class="plan-card__cabecera">
+              <span class="material-icons plan-card__icono" [style.color]="colorPlan(p.nombre)">workspace_premium</span>
+              <div>
+                <h3 class="plan-card__nombre">{{ p.nombre }}</h3>
+                <span class="plan-card__precio">${{ p.precio_mensual }}<span class="plan-card__periodo">/mes</span></span>
+              </div>
+            </div>
+
+            <div class="plan-card__stats">
+              <span class="badge-activos">
+                <span class="material-icons" style="font-size:13px">apartment</span>
+                {{ p.activos }} condominios activos
+              </span>
+            </div>
+
+            <ul class="plan-card__features">
+              @for (f of p.funcionalidades; track f.funcionalidad) {
+                <li>
+                  <span class="material-icons feature-check">check_circle</span>
+                  {{ etiquetaFuncionalidad(f.funcionalidad) }}
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>

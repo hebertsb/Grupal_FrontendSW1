@@ -1,0 +1,85 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">apartment</span>
+    Condominios
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <div class="barra-acciones">
+      <h2 class="seccion-titulo" style="margin:0">Condominios registrados</h2>
+      <button class="btn-primario" (click)="mostrarForm.set(!mostrarForm())">
+        <span class="material-icons">add</span> Nuevo condominio
+      </button>
+    </div>
+
+    @if (mostrarForm()) {
+      <div class="form-card">
+        <h3 class="form-titulo">Crear condominio</h3>
+        <div class="form-fila">
+          <label class="form-label">Nombre *</label>
+          <input class="form-input" [(ngModel)]="nombre" placeholder="Ej: Residencial Los Pinos" />
+        </div>
+        <div class="form-fila">
+          <label class="form-label">Ubicación</label>
+          <input class="form-input" [(ngModel)]="ubicacion" placeholder="Ej: Av. Principal 123" />
+        </div>
+        @if (error()) {
+          <p class="form-error">{{ error() }}</p>
+        }
+        <div class="form-acciones">
+          <button class="btn-secundario" (click)="mostrarForm.set(false)">Cancelar</button>
+          <button class="btn-primario" [disabled]="guardando() || !nombre.trim()" (click)="guardarCondominio()">
+            @if (guardando()) { Guardando… } @else { Guardar }
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (cargando()) {
+      <p class="texto-2">Cargando condominios…</p>
+    } @else if (condominios().length === 0) {
+      <p class="texto-2">No hay condominios registrados aún.</p>
+    } @else {
+      <div class="tabla-card">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Ubicación</th>
+              <th>Plan activo</th>
+              <th>Estado</th>
+              <th>Vence</th>
+              <th>Stripe ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of condominios(); track c.condominio_id) {
+              <tr>
+                <td class="texto-2">{{ c.condominio_id }}</td>
+                <td class="nombre-condo">{{ c.nombre }}</td>
+                <td class="texto-2">{{ c.ubicacion || '—' }}</td>
+                <td>
+                  @if (c.suscripcion) {
+                    <span class="badge-plan">{{ c.suscripcion.plan_nombre }}</span>
+                  } @else {
+                    <span class="texto-2">—</span>
+                  }
+                </td>
+                <td>
+                  <span class="badge-estado" [style.border-color]="colorEstado(c)" [style.color]="colorEstado(c)">
+                    {{ etiquetaEstado(c) }}
+                  </span>
+                </td>
+                <td class="texto-2">{{ c.suscripcion?.periodo_actual_fin?.substring(0, 10) || '—' }}</td>
+                <td class="texto-2 stripe-id">{{ c.stripe_cliente_id ? c.stripe_cliente_id.substring(0, 18) + '…' : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+</div>

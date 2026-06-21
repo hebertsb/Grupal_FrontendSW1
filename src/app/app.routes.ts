@@ -77,6 +77,21 @@ export const rutas: Routes = [
         loadComponent: () => import('./superadmin/paginas/dashboard-superadmin/dashboard-superadmin.component').then(m => m.DashboardSuperAdminComponent),
         title: 'SIVIC — Plataforma',
       },
+      {
+        path: 'superadmin/condominios',
+        loadComponent: () => import('./superadmin/paginas/condominios/condominios-superadmin.component').then(m => m.CondominiosSuperAdminComponent),
+        title: 'SIVIC — Condominios',
+      },
+      {
+        path: 'superadmin/planes',
+        loadComponent: () => import('./superadmin/paginas/planes/planes-superadmin.component').then(m => m.PlanesSuperAdminComponent),
+        title: 'SIVIC — Planes',
+      },
+      {
+        path: 'superadmin/usuarios',
+        loadComponent: () => import('./superadmin/paginas/usuarios/usuarios-superadmin.component').then(m => m.UsuariosSuperAdminComponent),
+        title: 'SIVIC — Usuarios plataforma',
+      },
     ],
   },
   { path: '**', redirectTo: 'camaras' },

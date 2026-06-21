@@ -1,0 +1,54 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">group</span>
+    Todos los usuarios
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <div class="barra-acciones">
+      <h2 class="seccion-titulo" style="margin:0">Usuarios de la plataforma</h2>
+      <div class="filtros">
+        <button class="btn-filtro" [class.activo]="filtroRol() === 'admin'"   (click)="filtroRol.set('admin')">Administradores</button>
+        <button class="btn-filtro" [class.activo]="filtroRol() === 'guardia'" (click)="filtroRol.set('guardia')">Guardias</button>
+        <button class="btn-filtro" [class.activo]="filtroRol() === ''"        (click)="filtroRol.set('')">Todos</button>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <p class="texto-2">Cargando usuarios…</p>
+    } @else if (usuariosFiltrados().length === 0) {
+      <p class="texto-2">No hay usuarios con ese rol.</p>
+    } @else {
+      <div class="tabla-card">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Condominio</th>
+              <th>Rol</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of usuariosFiltrados(); track u.usuario_id) {
+              <tr>
+                <td class="texto-2">{{ u.usuario_id }}</td>
+                <td class="nombre-usuario">{{ u.nombre }}</td>
+                <td class="texto-2">{{ u.email }}</td>
+                <td class="texto-2">{{ u.condominio_nombre || '—' }}</td>
+                <td>
+                  <span class="badge-rol" [style.border-color]="colorRol(u.rol)" [style.color]="colorRol(u.rol)">
+                    {{ etiquetaRol(u.rol) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+</div>

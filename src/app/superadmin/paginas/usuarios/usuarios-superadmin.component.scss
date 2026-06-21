@@ -1,0 +1,81 @@
+.barra-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.seccion-titulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+  margin: 0;
+}
+
+.filtros {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-filtro {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--texto-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { border-color: var(--primario); color: var(--primario); }
+  &.activo { background: var(--primario); border-color: var(--primario); color: #fff; font-weight: 600; }
+}
+
+.tabla-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  th {
+    background: var(--fondo);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--texto-2);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--borde);
+  }
+  td {
+    padding: 10px 14px;
+    color: var(--texto);
+    border-bottom: 1px solid var(--borde);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: color-mix(in srgb, var(--primario) 4%, transparent); }
+}
+
+.nombre-usuario { font-weight: 600; }
+
+.badge-rol {
+  border: 1px solid;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .tabla-card { overflow-x: auto; }
+  .tabla { min-width: 480px; }
+}

@@ -1,0 +1,92 @@
+.seccion-titulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+  margin: 0 0 20px;
+}
+
+.planes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.plan-card {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.15s;
+  &:hover { border-color: var(--primario); }
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__icono { font-size: 36px; }
+
+  &__nombre {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--texto);
+  }
+
+  &__precio {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--texto);
+    line-height: 1;
+  }
+
+  &__periodo {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--texto-2);
+  }
+
+  &__stats { }
+
+  &__features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--texto);
+    }
+  }
+}
+
+.badge-activos {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: color-mix(in srgb, var(--primario) 12%, transparent);
+  color: var(--primario);
+  border-radius: 10px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.feature-check {
+  font-size: 16px;
+  color: var(--exito);
+}
+
+@media (max-width: 768px) {
+  .planes-grid { grid-template-columns: 1fr; }
+}

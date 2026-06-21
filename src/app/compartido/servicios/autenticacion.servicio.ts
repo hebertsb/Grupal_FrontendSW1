@@ -53,6 +53,12 @@ export class AutenticacionServicio {
     return localStorage.getItem(CLAVE_TOKEN);
   }
 
+  guardarSesion(access: string, usuario: Usuario) {
+    localStorage.setItem(CLAVE_TOKEN, access);
+    localStorage.setItem(CLAVE_USUARIO, JSON.stringify(usuario));
+    this.usuarioActual.set(usuario);
+  }
+
   estaAutenticado(): boolean {
     return !!this.obtenerToken();
   }

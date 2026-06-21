@@ -45,7 +45,7 @@ export class DashboardSuperAdminComponent implements OnInit {
   ngOnInit() {
     forkJoin({
       condominios:   this.http.get<Condominio[]>(`${entorno.apiUrl}/condominios/`),
-      suscripciones: this.http.get<Suscripcion[]>(`${entorno.apiUrl}/suscripciones/`),
+      suscripciones: this.http.get<Suscripcion[]>(`${entorno.apiUrl}/condominios/suscripciones/`),
     }).subscribe({
       next: ({ condominios, suscripciones }) => {
         const filas: CondominioFila[] = condominios.map(c => ({
