@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AutenticacionServicio } from '../../../compartido/servicios/autenticacion.servicio';
 import { entorno } from '../../../../environments/environment';
@@ -54,6 +54,7 @@ export class LoginComponent implements OnInit {
   private fb     = inject(FormBuilder);
   private auth   = inject(AutenticacionServicio);
   private router = inject(Router);
+  private route  = inject(ActivatedRoute);
 
   readonly cargando      = signal(false);
   readonly error         = signal('');
@@ -95,9 +96,35 @@ export class LoginComponent implements OnInit {
             .map(f => ETIQUETAS[f.funcionalidad] ?? f.funcionalidad),
         }));
         this.planesSignal.set(infos);
-        // preseleccionar el "popular" (índice 1)
         this.planSeleccionado.set(infos[1] ?? infos[0] ?? null);
       },
+    });
+
+    // Si Stripe redirigió con ?pago=ok&session_id=xxx, confirmar la suscripción
+    this.route.queryParams.subscribe(params => {
+      if (params['pago'] === 'ok' && params['session_id']) {
+        this.http.post(
+          `${entorno.apiUrl}/pagos/confirmar-sesion/`,
+          { session_id: params['session_id'] },
+        ).subscribe({
+          next: () => {
+            // Limpiar query params de la URL sin recargar
+            this.router.navigate(['/login'], { replaceUrl: true });
+            // Si ya hay sesión activa, redirigir al dashboard
+            if (this.auth.estaAutenticado()) {
+              this.router.navigate(['/']);
+            }
+          },
+          error: () => {
+            // Ignorar errores silenciosamente; la suscripción queda en pending
+            if (this.auth.estaAutenticado()) {
+              this.router.navigate(['/']);
+            }
+          },
+        });
+      } else if (params['pago'] === 'ok' && this.auth.estaAutenticado()) {
+        this.router.navigate(['/']);
+      }
     });
   }
 
@@ -133,7 +160,7 @@ export class LoginComponent implements OnInit {
     const body = {
       ...this.formularioRegistro.value,
       plan_id:         this.planSeleccionado()!.plan_id,
-      url_exito:       `${origen}/login?pago=ok`,
+      url_exito:       `${origen}/login?pago=ok&session_id={CHECKOUT_SESSION_ID}`,
       url_cancelacion: `${origen}/login?pago=cancelado`,
     };
 
