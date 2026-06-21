@@ -369,6 +369,39 @@
   &:hover { border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,.08); }
 }
 
+/* ── Botones exportar ── */
+.export-btns {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all .18s;
+  .material-icons { font-size: 17px; }
+  &:disabled { opacity: .45; cursor: not-allowed; }
+  &--xlsx {
+    background: rgba(63,185,80,.12);
+    color: #3fb950;
+    border-color: rgba(63,185,80,.3);
+    &:not(:disabled):hover { background: rgba(63,185,80,.22); }
+  }
+  &--pdf {
+    background: rgba(248,81,73,.12);
+    color: #f85149;
+    border-color: rgba(248,81,73,.3);
+    &:not(:disabled):hover { background: rgba(248,81,73,.22); }
+  }
+}
+
 .barra-progreso {
   height: 6px;
   background: #30363d;

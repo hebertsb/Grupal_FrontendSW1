@@ -63,6 +63,29 @@
         </button>
       }
       <span class="filtros-total-badge">{{ datos()?.kpis?.total_eventos ?? 0 }} eventos</span>
+
+      <div class="export-btns">
+        <button class="btn-export btn-export--xlsx"
+                [disabled]="!datos() || exportandoXlsx()"
+                (click)="exportarExcel()"
+                title="Descargar Excel con todos los datos">
+          @if (exportandoXlsx()) {
+            <span class="material-icons spin">sync</span> Generando…
+          } @else {
+            <span class="material-icons">table_view</span> Excel
+          }
+        </button>
+        <button class="btn-export btn-export--pdf"
+                [disabled]="!datos() || exportandoPdf()"
+                (click)="exportarPdf()"
+                title="Descargar PDF con gráficos y tablas">
+          @if (exportandoPdf()) {
+            <span class="material-icons spin">sync</span> Generando…
+          } @else {
+            <span class="material-icons">picture_as_pdf</span> PDF
+          }
+        </button>
+      </div>
     </div>
 
     <div class="filtros-selectores-row">

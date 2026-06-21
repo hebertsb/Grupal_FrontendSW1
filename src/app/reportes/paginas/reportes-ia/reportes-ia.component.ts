@@ -279,7 +279,6 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!pregunta.trim() || !this.datos()) return;
     this.consultando.set(true);
     const d = this.datos()!;
-    // Enviamos solo el resumen (sin las listas completas) para no saturar el contexto
     const contexto = {
       kpis:       d.kpis,
       por_camara: d.por_camara,
@@ -293,5 +292,202 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
       next: r => { this.respuestaIa.set(r.respuesta); this.consultando.set(false); },
       error: (e: any) => { this.respuestaIa.set('Error: ' + (e?.error?.error ?? e?.message ?? 'Sin detalle')); this.consultando.set(false); },
     });
+  }
+
+  // ── Export Excel ──────────────────────────────────────────────────────────
+
+  readonly exportandoXlsx = signal(false);
+
+  async exportarExcel() {
+    const d = this.datos();
+    if (!d) return;
+    this.exportandoXlsx.set(true);
+    try {
+      const XLSX = await import('xlsx');
+      const wb   = XLSX.utils.book_new();
+      const fecha = new Date().toLocaleDateString('es-BO');
+
+      // ── Hoja 1: Resumen ──
+      const resumenAoa: any[][] = [
+        ['SIVIC — Reporte de Infracciones IA'],
+        [`Período: últimos ${d.kpis.dias} días`, `Generado: ${fecha}`],
+        [''],
+        ['Filtros aplicados'],
+        ['Cámara',  this.camaraFiltro ? this.nombreCamara(this.camaraFiltro) : 'Todas'],
+        ['Regla',   this.reglaFiltro  || 'Todas'],
+        ['Estado',  this.estadoFiltro || 'Todos'],
+        [''],
+        ['Indicador', 'Valor'],
+        ['Total eventos',           d.kpis.total_eventos],
+        ['Detecciones hoy',         d.kpis.eventos_hoy],
+        ['Confianza IA promedio',   d.kpis.confianza_promedio + '%'],
+        ['Cámara más activa',       d.kpis.camara_top],
+        ['Infracción más frecuente', d.kpis.regla_top],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumenAoa), 'Resumen');
+
+      // ── Hoja 2: Por Cámara ──
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Cámara', 'Total Eventos', 'Confianza IA (%)'],
+        ...d.por_camara.map(r => [r.camara, r.total, r.confianza]),
+      ]), 'Por Cámara');
+
+      // ── Hoja 3: Por Regla / Infracción ──
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Infracción', 'Total Eventos', 'Confianza IA (%)'],
+        ...d.por_regla.map(r => [r.regla, r.total, r.confianza]),
+      ]), 'Por Regla');
+
+      // ── Hoja 4: Por Hora ──
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Hora', 'Total Eventos'],
+        ...d.por_hora.map(h => [`${h.hora}:00`, h.total]),
+      ]), 'Por Hora');
+
+      // ── Hoja 5: Tendencia Diaria ──
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Fecha', 'Total Eventos'],
+        ...d.por_dia.map(r => [r.fecha, r.total]),
+      ]), 'Tendencia Diaria');
+
+      // ── Hoja 6: Por Estado ──
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Estado', 'Total Eventos'],
+        ...d.por_estado.map(r => [r.estado, r.total]),
+      ]), 'Por Estado');
+
+      XLSX.writeFile(wb, `SIVIC_Reporte_${new Date().toISOString().slice(0,10)}.xlsx`);
+    } finally {
+      this.exportandoXlsx.set(false);
+    }
+  }
+
+  // ── Export PDF ────────────────────────────────────────────────────────────
+
+  readonly exportandoPdf = signal(false);
+
+  async exportarPdf() {
+    const d = this.datos();
+    if (!d || !this.charts.length) return;
+    this.exportandoPdf.set(true);
+    try {
+      const { jsPDF }       = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const W   = doc.internal.pageSize.getWidth();
+      const H   = doc.internal.pageSize.getHeight();
+      let y = 0;
+
+      // ── Cabecera ──
+      doc.setFillColor(13, 17, 23);
+      doc.rect(0, 0, W, 32, 'F');
+      doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(88, 166, 255);
+      doc.text('SIVIC — Reporte de Infracciones IA', 14, 13);
+      doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(139, 148, 158);
+      doc.text(`Período: últimos ${d.kpis.dias} días  ·  Generado: ${new Date().toLocaleDateString('es-BO')}`, 14, 21);
+      if (this.filtrosActivos) {
+        const filtros = [
+          this.camaraFiltro && `Cámara: ${this.nombreCamara(this.camaraFiltro)}`,
+          this.reglaFiltro  && `Regla: ${this.reglaFiltro}`,
+          this.estadoFiltro && `Estado: ${this.estadoFiltro}`,
+        ].filter(Boolean).join('  |  ');
+        doc.text(`Filtros: ${filtros}`, 14, 27);
+      }
+      y = 40;
+
+      // ── KPIs ──
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(230, 237, 243);
+      doc.text('Indicadores Clave', 14, y); y += 4;
+      autoTable(doc, {
+        startY: y,
+        head:  [['Indicador', 'Valor']],
+        body: [
+          ['Total eventos',            String(d.kpis.total_eventos)],
+          ['Detecciones hoy',          String(d.kpis.eventos_hoy)],
+          ['Confianza IA promedio',    d.kpis.confianza_promedio + '%'],
+          ['Cámara más activa',        d.kpis.camara_top],
+          ['Infracción más frecuente', d.kpis.regla_top],
+        ],
+        theme: 'grid',
+        headStyles:          { fillColor: [35, 139, 230], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+        bodyStyles:          { fontSize: 9, textColor: [230, 237, 243] as any, fillColor: [22, 27, 34] as any },
+        alternateRowStyles:  { fillColor: [28, 33, 40] as any },
+        margin: { left: 14, right: 14 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 10;
+
+      // ── Gráficos (pares: wide 62% + narrow 35%) ──
+      const CHART_TITLES = [
+        'Detecciones por Cámara', 'Tipos de Infracción',
+        'Tendencia Temporal',     'Distribución por Hora',
+        'Confianza por Regla',    'Estado de Alertas',
+      ];
+      const GAP   = 4;
+      const CONT  = W - 28;
+      const wWide = CONT * 0.62;
+      const wNarr = CONT * 0.35;
+      const hRow  = CONT * 0.34;
+
+      for (let i = 0; i < this.charts.length; i += 2) {
+        if (y + hRow + 6 > H - 15) { doc.addPage(); y = 15; }
+        if (this.charts[i]) {
+          const img = this.charts[i].getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#161b22' });
+          doc.setFontSize(8); doc.setTextColor(139, 148, 158); doc.setFont('helvetica', 'bold');
+          doc.text(CHART_TITLES[i], 14, y); y += 3;
+          doc.addImage(img, 'PNG', 14, y, wWide, hRow);
+        }
+        if (this.charts[i + 1]) {
+          const img2 = this.charts[i + 1].getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#161b22' });
+          doc.setFontSize(8); doc.setTextColor(139, 148, 158); doc.setFont('helvetica', 'bold');
+          doc.text(CHART_TITLES[i + 1], 14 + wWide + GAP, y - 3);
+          doc.addImage(img2, 'PNG', 14 + wWide + GAP, y, wNarr, hRow);
+        }
+        y += hRow + 8;
+      }
+
+      // ── Tablas de detalle ──
+      if (y + 30 > H - 15) { doc.addPage(); y = 15; }
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(230, 237, 243);
+      doc.text('Detalle por Infracción', 14, y); y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Infracción', 'Detecciones', 'Confianza IA']],
+        body: d.por_regla.map(r => [r.regla, r.total, r.confianza + '%']),
+        theme: 'grid',
+        headStyles:         { fillColor: [35, 139, 230], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+        bodyStyles:         { fontSize: 9, textColor: [230, 237, 243] as any, fillColor: [22, 27, 34] as any },
+        alternateRowStyles: { fillColor: [28, 33, 40] as any },
+        margin: { left: 14, right: 14 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 8;
+
+      if (y + 30 > H - 15) { doc.addPage(); y = 15; }
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(230, 237, 243);
+      doc.text('Detalle por Cámara', 14, y); y += 4;
+      autoTable(doc, {
+        startY: y,
+        head: [['Cámara', 'Detecciones', 'Confianza IA']],
+        body: d.por_camara.map(r => [r.camara, r.total, r.confianza + '%']),
+        theme: 'grid',
+        headStyles:         { fillColor: [35, 139, 230], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+        bodyStyles:         { fontSize: 9, textColor: [230, 237, 243] as any, fillColor: [22, 27, 34] as any },
+        alternateRowStyles: { fillColor: [28, 33, 40] as any },
+        margin: { left: 14, right: 14 },
+      });
+
+      // ── Pie de página ──
+      const pages = doc.getNumberOfPages();
+      for (let p = 1; p <= pages; p++) {
+        doc.setPage(p);
+        doc.setFontSize(7.5); doc.setTextColor(139, 148, 158); doc.setFont('helvetica', 'normal');
+        doc.text(`SIVIC — Sistema de Visión Inteligente para Condominios`, 14, H - 6);
+        doc.text(`Pág. ${p} / ${pages}`, W - 14, H - 6, { align: 'right' });
+      }
+
+      doc.save(`SIVIC_Reporte_${new Date().toISOString().slice(0,10)}.pdf`);
+    } finally {
+      this.exportandoPdf.set(false);
+    }
   }
 }
