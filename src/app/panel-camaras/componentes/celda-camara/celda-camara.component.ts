@@ -41,6 +41,10 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly iaVivaActiva   = signal(false);
   readonly conteoPersonas = signal(0);
   readonly nivel          = signal<'normal' | 'sospechoso' | 'critico' | null>(null);
+  readonly modoFiltro     = signal<'personas' | 'vehiculos' | 'todo'>('todo');
+
+  private readonly _ALERTAS_PERSONA  = new Set(['zona_restringida_persona', 'merodeo', 'personas_peleando', 'caida_persona', 'intrusion_nocturna', 'acceso_fuera_horario']);
+  private readonly _ALERTAS_VEHICULO = new Set(['vehiculo_zona_restringida', 'vehiculo_mal_estacionado']);
 
   private intervaloReloj?:   ReturnType<typeof setInterval>;
   private intervaloFrames?:  ReturnType<typeof setInterval>;
@@ -79,17 +83,31 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     this.analizando.set(true);
     this.ia.analizarCamaraViva(this.camara.camara_id).subscribe({
       next: r => {
-        const soloPersonas = (r.detecciones ?? []).filter(
-          d => d.clase === 'persona' && d.confianza >= 0.9
-        );
-        this.detecciones.set(soloPersonas);
-        this.alertasModel.set(r.alertas ?? []);
-        this.conteoPersonas.set(r.conteo_personas ?? soloPersonas.length);
+        const dets = this._filtrarDets(r.detecciones ?? []);
+        this.detecciones.set(dets);
+        this.alertasModel.set(this._filtrarAlertas(r.alertas ?? []));
+        this.conteoPersonas.set(r.conteo_personas ?? dets.filter(d => d.clase === 'persona').length);
         this.nivel.set(r.nivel ?? null);
         this.analizando.set(false);
       },
       error: () => this.analizando.set(false),
     });
+  }
+
+  private _filtrarDets(dets: Deteccion[]): Deteccion[] {
+    switch (this.modoFiltro()) {
+      case 'personas':  return dets.filter(d => d.clase === 'persona'  && d.confianza >= 0.95);
+      case 'vehiculos': return dets.filter(d => d.clase === 'vehiculo' && d.confianza >= 0.5);
+      default:          return dets.filter(d => d.confianza >= 0.5);
+    }
+  }
+
+  private _filtrarAlertas(alertas: string[]): string[] {
+    switch (this.modoFiltro()) {
+      case 'personas':  return alertas.filter(a => this._ALERTAS_PERSONA.has(a));
+      case 'vehiculos': return alertas.filter(a => this._ALERTAS_VEHICULO.has(a));
+      default:          return alertas;
+    }
   }
 
   colorNivel(): string {
@@ -190,11 +208,9 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     this.analizando.set(true);
     this.ia.analizarFramePersona(blob).subscribe({
       next: r => {
-        const soloPersonas = (r.detecciones ?? []).filter(
-          d => d.clase === 'persona' && d.confianza >= 0.9
-        );
-        this.detecciones.set(soloPersonas);
-        this.alertasModel.set(r.alertas ?? []);
+        const dets = this._filtrarDets(r.detecciones ?? []);
+        this.detecciones.set(dets);
+        this.alertasModel.set(this._filtrarAlertas(r.alertas ?? []));
         this.razaModel.set(null);
         this.analizando.set(false);
       },

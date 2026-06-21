@@ -79,6 +79,7 @@
             <span>{{ alerta === 'zona_restringida_persona' ? 'Zona Restringida' :
                      alerta === 'merodeo' ? 'Merodeo' :
                      alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
+                     alerta === 'vehiculo_mal_estacionado' ? 'Vehículo Mal Estacionado' :
                      alerta === 'personas_peleando' ? 'Pelea Detectada' :
                      alerta === 'caida_persona' ? 'Caída de Persona' :
                      alerta === 'intrusion_nocturna' ? 'Intrusión Nocturna' :
@@ -154,7 +155,16 @@
         @for (alerta of alertasModel(); track alerta) {
           <div class="ia-resultado-badge ia-resultado-badge--alerta" title="Alerta de infracción de convivencia">
             <span class="material-icons">warning</span>
-            <span>{{ alerta === 'sin_correa' ? 'Mascota Suelta' : (alerta === 'heces_no_limpiadas' ? 'Heces Detectadas' : alerta) }}</span>
+            <span>{{ alerta === 'sin_correa' ? 'Mascota Suelta' :
+                     alerta === 'heces_no_limpiadas' ? 'Heces Detectadas' :
+                     alerta === 'zona_restringida_persona' ? 'Zona Restringida' :
+                     alerta === 'merodeo' ? 'Merodeo' :
+                     alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
+                     alerta === 'vehiculo_mal_estacionado' ? 'Vehículo Mal Estacionado' :
+                     alerta === 'personas_peleando' ? 'Pelea Detectada' :
+                     alerta === 'caida_persona' ? 'Caída de Persona' :
+                     alerta === 'intrusion_nocturna' ? 'Intrusión Nocturna' :
+                     alerta === 'acceso_fuera_horario' ? 'Acceso Fuera de Horario' : alerta }}</span>
           </div>
         }
       </div>
@@ -164,6 +174,19 @@
   <!-- Input file oculto -->
   <input #inputFile type="file" accept="video/*,image/*"
          style="display:none" (change)="onFileSelect($event)" />
+
+  <!-- ── Selector modo IA ── -->
+  <div class="celda__modo-ia">
+    <button [class.activo]="modoFiltro() === 'personas'"  (click)="modoFiltro.set('personas')"  title="Enfocarse en personas">
+      <span class="material-icons">person</span>
+    </button>
+    <button [class.activo]="modoFiltro() === 'vehiculos'" (click)="modoFiltro.set('vehiculos')" title="Enfocarse en vehículos">
+      <span class="material-icons">directions_car</span>
+    </button>
+    <button [class.activo]="modoFiltro() === 'todo'"      (click)="modoFiltro.set('todo')"      title="Mostrar todo">
+      <span class="material-icons">grid_view</span>
+    </button>
+  </div>
 
   <!-- ── HUD inferior ── -->
   <div class="celda__hud">
