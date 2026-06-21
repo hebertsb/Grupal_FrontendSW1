@@ -115,8 +115,10 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeObs = new ResizeObserver(() =>
       this.zone.run(() => this.charts.forEach(c => c.resize()))
     );
-    const cont = this.elCamara.nativeElement.closest('.reportes-wrapper');
-    if (cont) this.resizeObs.observe(cont);
+    [this.elCamara, this.elRegla, this.elTendencia,
+     this.elHoras, this.elConfianza, this.elEstado].forEach(el => {
+      if (el?.nativeElement) this.resizeObs!.observe(el.nativeElement);
+    });
   }
 
   private _init(el: ElementRef): echarts.ECharts {
@@ -511,9 +513,13 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
         const x = 14 + i * (kpiW + 3);
         doc.setFillColor(...k.color); doc.setDrawColor(...k.color);
         doc.roundedRect(x, y, kpiW, kpiH, 2, 2, 'F');
-        doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-        doc.text(k.val, x + kpiW / 2, y + 10, { align: 'center' });
-        doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold');
+        const valFs = k.val.length > 10 ? 8 : k.val.length > 7 ? 10 : 14;
+        doc.setFontSize(valFs);
+        const lines = doc.splitTextToSize(k.val, kpiW - 3);
+        const valY  = lines.length > 1 ? y + 7.5 : y + 10;
+        doc.text(lines.slice(0, 2), x + kpiW / 2, valY, { align: 'center', lineHeightFactor: 1.3 });
+        doc.setFontSize(6.5); doc.setFont('helvetica', 'normal');
         doc.text(k.label, x + kpiW / 2, y + 15.5, { align: 'center' });
       });
       y += kpiH + 8;
