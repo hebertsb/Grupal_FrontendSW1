@@ -61,6 +61,10 @@ export class AutenticacionServicio {
     return this.usuarioActual()?.rol === 'admin';
   }
 
+  esSuperAdmin(): boolean {
+    return this.usuarioActual()?.rol === 'superadmin';
+  }
+
   private _cargarUsuario(): Usuario | null {
     try {
       const datos = localStorage.getItem(CLAVE_USUARIO);
