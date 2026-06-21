@@ -56,10 +56,11 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private route  = inject(ActivatedRoute);
 
-  readonly cargando      = signal(false);
-  readonly error         = signal('');
-  readonly modo          = signal<'login' | 'registro'>('login');
-  readonly planesSignal   = signal<PlanInfo[]>([]);
+  readonly cargando         = signal(false);
+  readonly error            = signal('');
+  readonly exito            = signal('');
+  readonly modo             = signal<'login' | 'registro'>('login');
+  readonly planesSignal     = signal<PlanInfo[]>([]);
   readonly planSeleccionado = signal<PlanInfo | null>(null);
 
   get planes() { return this.planesSignal(); }
@@ -102,28 +103,21 @@ export class LoginComponent implements OnInit {
 
     // Si Stripe redirigió con ?pago=ok&session_id=xxx, confirmar la suscripción
     this.route.queryParams.subscribe(params => {
-      if (params['pago'] === 'ok' && params['session_id']) {
-        this.http.post(
-          `${entorno.apiUrl}/pagos/confirmar-sesion/`,
-          { session_id: params['session_id'] },
-        ).subscribe({
-          next: () => {
-            // Limpiar query params de la URL sin recargar
-            this.router.navigate(['/login'], { replaceUrl: true });
-            // Si ya hay sesión activa, redirigir al dashboard
-            if (this.auth.estaAutenticado()) {
-              this.router.navigate(['/']);
-            }
-          },
-          error: () => {
-            // Ignorar errores silenciosamente; la suscripción queda en pending
-            if (this.auth.estaAutenticado()) {
-              this.router.navigate(['/']);
-            }
-          },
-        });
-      } else if (params['pago'] === 'ok' && this.auth.estaAutenticado()) {
-        this.router.navigate(['/']);
+      if (params['pago'] === 'ok') {
+        // Cerrar cualquier sesión temporal guardada durante el registro
+        this.auth.cerrarSesionSilenciosa();
+        // Limpiar query params de la URL
+        this.router.navigate(['/login'], { replaceUrl: true });
+
+        if (params['session_id']) {
+          this.http.post(
+            `${entorno.apiUrl}/pagos/confirmar-sesion/`,
+            { session_id: params['session_id'] },
+          ).subscribe();
+        }
+
+        this.exito.set('¡Pago completado! Ya puedes iniciar sesión con tu cuenta.');
+        this.modo.set('login');
       }
     });
   }
@@ -166,7 +160,7 @@ export class LoginComponent implements OnInit {
 
     this.http.post<{ access: string; checkout_url: string }>(`${entorno.apiUrl}/auth/registro-completo/`, body).subscribe({
       next: res => {
-        this.auth.guardarSesion(res.access, (res as any).usuario);
+        // No guardar sesión aquí — el usuario debe loguearse manualmente tras el pago
         window.location.href = res.checkout_url;
       },
       error: (e) => {

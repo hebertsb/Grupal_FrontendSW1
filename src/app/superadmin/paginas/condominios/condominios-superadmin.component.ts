@@ -6,10 +6,11 @@ import { CabeceraComponent } from '../../../compartido/componentes/cabecera/cabe
 import { entorno } from '../../../../environments/environment';
 
 interface Suscripcion {
-  plan_nombre:      string;
-  is_activo:        boolean;
-  stripe_estado:    string;
-  periodo_actual_fin: string | null;
+  plan_nombre:           string;
+  is_activo:             boolean;
+  stripe_estado:         string;
+  stripe_suscripcion_id: string | null;
+  periodo_actual_fin:    string | null;
 }
 
 interface Condominio {

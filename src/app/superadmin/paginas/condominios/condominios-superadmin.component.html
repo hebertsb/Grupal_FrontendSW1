@@ -73,7 +73,14 @@
                   </span>
                 </td>
                 <td class="texto-2">{{ c.suscripcion?.periodo_actual_fin?.substring(0, 10) || '—' }}</td>
-                <td class="texto-2 stripe-id">{{ c.stripe_cliente_id ? c.stripe_cliente_id.substring(0, 18) + '…' : '—' }}</td>
+                <td class="texto-2 stripe-id">
+                  @if (c.suscripcion?.stripe_suscripcion_id) {
+                    <a [href]="'https://dashboard.stripe.com/test/subscriptions/' + c.suscripcion!.stripe_suscripcion_id"
+                       target="_blank" rel="noopener" style="color:var(--primario);text-decoration:none;font-size:11px">
+                      {{ c.suscripcion!.stripe_suscripcion_id!.substring(0, 20) }}…
+                    </a>
+                  } @else { — }
+                </td>
               </tr>
             }
           </tbody>

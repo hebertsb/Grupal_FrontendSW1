@@ -306,6 +306,18 @@
   margin-bottom: 16px;
 }
 
+.form-exito {
+  background: rgba(74,222,128,.12);
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  padding: 10px 12px;
+  border-radius: var(--radio);
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
 .form-seccion {
   font-size: 11px;
   font-weight: 700;
