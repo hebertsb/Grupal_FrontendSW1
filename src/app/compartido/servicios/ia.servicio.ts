@@ -49,10 +49,11 @@ export class IaServicio {
     );
   }
 
-  analizarFramePersona(imagen: Blob, modoFiltro: string = 'todo'): Observable<ResultadoAnalisis> {
+  analizarFramePersona(imagen: Blob, modoFiltro: string = 'todo', camaraId?: number): Observable<ResultadoAnalisis> {
     const fd = new FormData();
     fd.append('imagen', imagen, 'frame.jpg');
     fd.append('modo_filtro', modoFiltro);
+    if (camaraId) fd.append('camara_id', String(camaraId));
     return this.http.post<ResultadoAnalisis>(
       `${entorno.apiUrl}/camaras/analizar_persona/`,
       fd,

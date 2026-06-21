@@ -242,7 +242,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   analizarBlob(blob: Blob) {
     if (this.analizando()) return;
     this.analizando.set(true);
-    this.ia.analizarFramePersona(blob, this.modoFiltro()).subscribe({
+    this.ia.analizarFramePersona(blob, this.modoFiltro(), this.camara.camara_id).subscribe({
       next: r => {
         const dets = this._filtrarDets(r.detecciones ?? []);
         this.detecciones.set(dets);
