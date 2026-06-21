@@ -112,7 +112,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
 
   private _filtrarDets(dets: Deteccion[]): Deteccion[] {
     switch (this.modoFiltro()) {
-      case 'personas':  return dets.filter(d => d.clase === 'persona'  && d.confianza >= 0.95);
+      case 'personas':  return dets.filter(d => d.clase === 'persona'  && d.confianza >= 0.5);
       case 'vehiculos': return dets.filter(d => d.clase === 'vehiculo' && d.confianza >= 0.5);
       case 'mascotas':  return dets.filter(d => ['perro', 'dog', 'mascota', 'heces', 'feces', 'poop'].includes(d.clase.toLowerCase()) && d.confianza >= 0.5);
       default:          return dets.filter(d => d.confianza >= 0.5);
@@ -167,11 +167,29 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   }
 
   // ── Drag & Drop ──
-  onDragOver(ev: DragEvent)  { ev.preventDefault(); this.arrastrando.set(true);  }
-  onDragLeave()               { this.arrastrando.set(false); }
+  private _dragCounter = 0;
+
+  onDragOver(ev: DragEvent)  { ev.preventDefault(); ev.stopPropagation(); }
+
+  onDragEnter(ev: DragEvent) {
+    ev.preventDefault();
+    this._dragCounter++;
+    this.arrastrando.set(true);
+  }
+
+  onDragLeave(ev: DragEvent) {
+    ev.preventDefault();
+    this._dragCounter--;
+    if (this._dragCounter <= 0) {
+      this._dragCounter = 0;
+      this.arrastrando.set(false);
+    }
+  }
 
   onDrop(ev: DragEvent) {
     ev.preventDefault();
+    ev.stopPropagation();
+    this._dragCounter = 0;
     this.arrastrando.set(false);
     const file = ev.dataTransfer?.files[0];
     if (file) this.cargarArchivo(file);
