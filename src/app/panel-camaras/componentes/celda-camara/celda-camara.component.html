@@ -11,8 +11,22 @@
     <span>Soltar video o imagen</span>
   </div>
 
+  <!-- ── MODO LOCAL: cámara del celular vía Flutter → Django ultimo_frame ── -->
+  @if (modo() === 'live' && esLocal()) {
+    @if (localFrameUrl()) {
+      <img class="celda__media"
+           [src]="localFrameUrl()!"
+           alt="CAM {{ camara.camara_id }}" />
+    } @else {
+      <div class="celda__estado">
+        <span class="material-icons estado-icono spin">radar</span>
+        <span>Esperando cámara local…</span>
+      </div>
+    }
+  }
+
   <!-- ── MODO LIVE: stream MJPEG del backend ── -->
-  @if (modo() === 'live') {
+  @if (modo() === 'live' && !esLocal()) {
     @if (cargando()) {
       <div class="celda__estado">
         <span class="material-icons estado-icono spin">radar</span>
@@ -185,7 +199,7 @@
   </div>
 
   <!-- ── Indicador LIVE / ARCHIVO ── -->
-  @if (modo() === 'live' && !errorStream() && !cargando()) {
+  @if (modo() === 'live' && (esLocal() ? !!localFrameUrl() : (!errorStream() && !cargando()))) {
     <div class="celda__badge celda__badge--live">
       <span class="live-dot"></span> LIVE
     </div>

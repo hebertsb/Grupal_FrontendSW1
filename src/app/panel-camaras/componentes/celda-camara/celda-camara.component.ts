@@ -1,6 +1,6 @@
 import {
   Component, ElementRef, Input, OnDestroy, OnInit,
-  ViewChild, inject, signal,
+  ViewChild, computed, inject, signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Camara } from '../../../compartido/modelos/camara.modelo';
@@ -42,18 +42,34 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly conteoPersonas = signal(0);
   readonly nivel          = signal<'normal' | 'sospechoso' | 'critico' | null>(null);
 
+  readonly esLocal       = computed(() => this.camara.rtsp_url.startsWith('local://'));
+  readonly localFrameUrl = signal<string | null>(null);
+
   private intervaloReloj?:   ReturnType<typeof setInterval>;
   private intervaloFrames?:  ReturnType<typeof setInterval>;
   private intervaloIaViva?:  ReturnType<typeof setInterval>;
+  private intervaloLocal?:   ReturnType<typeof setInterval>;
 
   ngOnInit() {
     this.intervaloReloj = setInterval(() => this.horaActual.set(new Date()), 1000);
+    if (this.esLocal()) {
+      this._refrescarFrameLocal();
+      this.intervaloLocal = setInterval(() => this._refrescarFrameLocal(), 2000);
+    }
+  }
+
+  private _refrescarFrameLocal() {
+    const token = this.auth.obtenerToken() ?? '';
+    this.localFrameUrl.set(
+      `${entorno.apiUrl}/camaras/${this.camara.camara_id}/ultimo_frame/?token=${encodeURIComponent(token)}&_t=${Date.now()}`
+    );
   }
 
   ngOnDestroy() {
     clearInterval(this.intervaloReloj);
     clearInterval(this.intervaloFrames);
     clearInterval(this.intervaloIaViva);
+    clearInterval(this.intervaloLocal);
     const url = this.archivoUrl();
     if (url) URL.revokeObjectURL(url);
   }

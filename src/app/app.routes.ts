@@ -63,6 +63,11 @@ export const rutas: Routes = [
         title: 'SIVIC — Auditoría',
       },
       {
+        path: 'reportes',
+        loadComponent: () => import('./reportes/paginas/reportes-ia/reportes-ia.component').then(m => m.ReportesIaComponent),
+        title: 'SIVIC — Reportes IA',
+      },
+      {
         path: 'plano',
         loadComponent: () => import('./plano/paginas/plano-condominio/plano-condominio.component').then(m => m.PlanoCondominioComponent),
         title: 'SIVIC — Plano del Condominio',

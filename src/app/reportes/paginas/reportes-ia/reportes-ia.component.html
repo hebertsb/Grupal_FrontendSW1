@@ -1,0 +1,256 @@
+<app-cabecera titulo="Reportes IA" icono="analytics" />
+
+<div class="reportes-wrapper">
+
+  <!-- ── Asistente IA por Voz (ARRIBA) ── -->
+  <div class="asistente-card">
+    <div class="asistente-header">
+      <span class="material-icons asistente-icono">smart_toy</span>
+      <div>
+        <h3 class="asistente-titulo">Asistente IA · Consulta por voz</h3>
+        <p class="asistente-sub">Pregunta sobre el reporte en lenguaje natural. Powered by Groq · LLaMA 3</p>
+      </div>
+      @if (!escuchando()) {
+        <button class="btn-mic" [disabled]="consultando()" (click)="iniciarEscucha()">
+          <span class="material-icons">mic</span> Hablar
+        </button>
+      } @else {
+        <button class="btn-mic btn-mic--escuchando" (click)="detenerEscucha()">
+          <span class="material-icons">stop_circle</span> Parar
+        </button>
+      }
+    </div>
+
+    @if (preguntaTexto()) {
+      <div class="asistente-pregunta">
+        <span class="material-icons">person</span>
+        <span>{{ preguntaTexto() }}</span>
+      </div>
+    }
+    @if (consultando()) {
+      <div class="asistente-pensando">
+        <span class="dot-pulse"></span>
+        <span class="dot-pulse" style="animation-delay:.2s"></span>
+        <span class="dot-pulse" style="animation-delay:.4s"></span>
+        <span style="color:#8b949e;font-size:13px;margin-left:8px">Analizando datos…</span>
+      </div>
+    }
+    @if (respuestaIa() && !consultando()) {
+      <div class="asistente-respuesta">
+        <span class="material-icons">smart_toy</span>
+        <p>{{ respuestaIa() }}</p>
+      </div>
+    }
+    @if (!preguntaTexto() && !escuchando()) {
+      <div class="asistente-ejemplos">
+        <span class="asistente-ejemplos-label">Ejemplos:</span>
+        @for (ej of ['¿Cuál cámara detectó más?','¿A qué hora hay más peligro?','¿Cuán precisa es la IA en peleas?','¿Cuántos eventos hubo hoy?']; track ej) {
+          <button class="ejemplo-chip" (click)="preguntaTexto.set(ej); consultarGroq(ej)">{{ ej }}</button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- ── Barra de filtros (más grande) ── -->
+  <div class="filtros-panel">
+    <div class="filtros-periodo-row">
+      <span class="filtros-seccion-titulo">
+        <span class="material-icons">calendar_today</span> Período
+      </span>
+      @for (d of [7, 30, 90]; track d) {
+        <button class="periodo-btn" [class.periodo-btn--activo]="diasSel() === d" (click)="cargar(d)">
+          {{ d }} días
+        </button>
+      }
+      <span class="filtros-total-badge">{{ datos()?.kpis?.total_eventos ?? 0 }} eventos</span>
+    </div>
+
+    <div class="filtros-selectores-row">
+      <span class="filtros-seccion-titulo">
+        <span class="material-icons">filter_list</span> Filtrar por
+      </span>
+
+      <div class="filtro-select-wrap">
+        <span class="material-icons filtro-icono-grande">videocam</span>
+        <select class="filtro-select-grande" [(ngModel)]="camaraFiltro" (change)="cargar()">
+          <option value="">Todas las cámaras</option>
+          @for (cam of datos()?.camaras_disponibles ?? []; track cam.id) {
+            <option [value]="cam.id">{{ cam.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filtro-select-wrap">
+        <span class="material-icons filtro-icono-grande">rule</span>
+        <select class="filtro-select-grande" [(ngModel)]="reglaFiltro" (change)="cargar()">
+          <option value="">Todas las infracciones</option>
+          @for (r of datos()?.reglas_disponibles ?? []; track r) {
+            <option [value]="r">{{ r }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filtro-select-wrap">
+        <span class="material-icons filtro-icono-grande">flag</span>
+        <select class="filtro-select-grande" [(ngModel)]="estadoFiltro" (change)="cargar()">
+          <option value="">Todos los estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en_atencion">En Atención</option>
+          <option value="resuelto">Resuelto</option>
+          <option value="falsa_alarma">Falsa Alarma</option>
+        </select>
+      </div>
+
+      @if (filtrosActivos) {
+        <button class="btn-limpiar-grande" (click)="limpiarFiltros()">
+          <span class="material-icons">filter_alt_off</span> Limpiar filtros
+        </button>
+      }
+    </div>
+
+    <!-- Chips activos -->
+    @if (filtrosActivos) {
+      <div class="filtros-chips">
+        @if (camaraFiltro) {
+          <span class="chip chip--camara">
+            <span class="material-icons">videocam</span> {{ nombreCamara(camaraFiltro) }}
+            <button (click)="camaraFiltro=''; cargar()">×</button>
+          </span>
+        }
+        @if (reglaFiltro) {
+          <span class="chip chip--regla">
+            <span class="material-icons">rule</span> {{ reglaFiltro }}
+            <button (click)="reglaFiltro=''; cargar()">×</button>
+          </span>
+        }
+        @if (estadoFiltro) {
+          <span class="chip chip--estado">
+            <span class="material-icons">flag</span> {{ estadoFiltro }}
+            <button (click)="estadoFiltro=''; cargar()">×</button>
+          </span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (cargando()) {
+    <div class="estado-carga">
+      <span class="material-icons spin">analytics</span>
+      <span>Generando reporte…</span>
+    </div>
+  }
+
+  @if (!cargando() && datos(); as d) {
+
+    <!-- ── KPI Cards ── -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icono" style="background:rgba(35,139,230,.15);color:#238be6"><span class="material-icons">event_note</span></div>
+        <div class="kpi-info">
+          <span class="kpi-valor">{{ d.kpis.total_eventos }}</span>
+          <span class="kpi-label">Total eventos ({{ d.kpis.dias }}d)</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icono" style="background:rgba(63,185,80,.15);color:#3fb950"><span class="material-icons">today</span></div>
+        <div class="kpi-info">
+          <span class="kpi-valor">{{ d.kpis.eventos_hoy }}</span>
+          <span class="kpi-label">Detecciones hoy</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icono" style="background:rgba(210,153,34,.15);color:#d29922"><span class="material-icons">psychology</span></div>
+        <div class="kpi-info">
+          <span class="kpi-valor">{{ d.kpis.confianza_promedio }}%</span>
+          <span class="kpi-label">Confianza IA promedio</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icono" style="background:rgba(248,81,73,.15);color:#f85149"><span class="material-icons">videocam</span></div>
+        <div class="kpi-info">
+          <span class="kpi-valor kpi-valor--sm">{{ d.kpis.camara_top }}</span>
+          <span class="kpi-label">Cámara más activa</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icono" style="background:rgba(188,140,255,.15);color:#bc8cff"><span class="material-icons">rule</span></div>
+        <div class="kpi-info">
+          <span class="kpi-valor kpi-valor--sm">{{ d.kpis.regla_top }}</span>
+          <span class="kpi-label">Infracción más frecuente</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Gráficas fila 1 ── -->
+    <div class="reportes-grid">
+      <div class="chart-card chart-card--wide">
+        <p class="chart-hint">💡 Clic en barra → filtra por cámara</p>
+        <div #chartCamara class="chart-canvas"></div>
+      </div>
+      <div class="chart-card">
+        <p class="chart-hint">💡 Clic en porción → filtra por infracción</p>
+        <div #chartRegla class="chart-canvas"></div>
+      </div>
+    </div>
+
+    <!-- ── Gráficas fila 2 ── -->
+    <div class="reportes-grid">
+      <div class="chart-card chart-card--wide">
+        <div #chartTendencia class="chart-canvas"></div>
+      </div>
+      <div class="chart-card">
+        <div #chartHoras class="chart-canvas"></div>
+      </div>
+    </div>
+
+    <!-- ── Gráficas fila 3 ── -->
+    <div class="reportes-grid">
+      <div class="chart-card chart-card--wide">
+        <div #chartConfianza class="chart-canvas"></div>
+      </div>
+      <div class="chart-card">
+        <p class="chart-hint">💡 Clic en sección → filtra por estado</p>
+        <div #chartEstado class="chart-canvas"></div>
+      </div>
+    </div>
+
+    <!-- ── Tabla ── -->
+    <div class="tabla-card">
+      <h3 class="tabla-titulo"><span class="material-icons">table_chart</span> Detalle por tipo de infracción</h3>
+      <table class="tabla-reporte">
+        <thead>
+          <tr>
+            <th>Infracción</th>
+            <th class="num">Detecciones</th>
+            <th class="num">Confianza IA</th>
+            <th>Precisión visual</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of d.por_regla; track r.regla) {
+            <tr [class.fila--activa]="reglaFiltro === r.regla">
+              <td><span class="regla-chip">{{ r.regla }}</span></td>
+              <td class="num"><strong>{{ r.total }}</strong></td>
+              <td class="num">{{ r.confianza }}%</td>
+              <td>
+                <div class="barra-progreso">
+                  <div class="barra-progreso__fill"
+                       [style.width.%]="r.confianza"
+                       [style.background]="r.confianza >= 90 ? '#3fb950' : r.confianza >= 75 ? '#238be6' : '#d29922'">
+                  </div>
+                </div>
+              </td>
+              <td>
+                <button class="btn-filtrar-tabla" (click)="reglaFiltro=(reglaFiltro===r.regla?'':r.regla); cargar()" [title]="reglaFiltro===r.regla?'Quitar filtro':'Filtrar'">
+                  <span class="material-icons">{{ reglaFiltro === r.regla ? 'filter_alt_off' : 'filter_alt' }}</span>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+  }
+</div>

@@ -33,6 +33,7 @@ export class BarraLateralComponent implements OnInit {
     { etiqueta: 'Config. Cámaras', icono: 'settings_input_component', ruta: '/configuracion/camaras', soloAdmin: true  },
     { etiqueta: 'Usuarios',        icono: 'manage_accounts',         ruta: '/configuracion/usuarios', soloAdmin: true  },
     { etiqueta: 'Auditoría',       icono: 'history',                 ruta: '/auditoria',              soloAdmin: true  },
+    { etiqueta: 'Reportes IA',    icono: 'analytics',               ruta: '/reportes',               soloAdmin: true  },
     { etiqueta: 'Plano',           icono: 'map',                     ruta: '/plano',                  soloAdmin: true  },
   ];
 
