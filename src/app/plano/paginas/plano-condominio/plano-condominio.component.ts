@@ -3,10 +3,12 @@ import {
   inject, signal, computed, ElementRef, ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { PlanosServicio, PlanoCondominio, ImagenZona } from '../../../compartido/servicios/planos.servicio';
 import { CamarasServicio } from '../../../compartido/servicios/camaras.servicio';
 import { CabeceraComponent } from '../../../compartido/componentes/cabecera/cabecera.component';
 import { Camara } from '../../../compartido/modelos/camara.modelo';
+import { entorno } from '../../../../environments/environment';
 
 const CONDOMINIO_ID = 3;
 
@@ -28,9 +30,11 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
   @ViewChild('containerRef') containerRef!: ElementRef<HTMLDivElement>;
   @ViewChild('innerWrapper') innerWrapper!: ElementRef<HTMLDivElement>;
   @ViewChild('imgPlano')     imgPlanoRef!:  ElementRef<HTMLImageElement>;
+  @ViewChild('heatCanvas')   heatCanvasRef!: ElementRef<HTMLCanvasElement>;
 
   private srv    = inject(PlanosServicio);
   private camSrv = inject(CamarasServicio);
+  private http   = inject(HttpClient);
 
   readonly cargando      = signal(true);
   readonly guardando     = signal(false);
@@ -43,6 +47,12 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
   readonly nombrePlano   = signal('Plano Principal');
   readonly errorMsg      = signal('');
   readonly guardadoOk    = signal(false);
+
+  // ── Heatmap ───────────────────────────────────────────────────────────────
+  readonly mostrarHeatmap = signal(false);
+  readonly cargandoHeat   = signal(false);
+  private  _eventosXCam: Map<number, number> = new Map();
+  readonly totalEventosCam = signal<Map<number, number>>(new Map());
 
   // ── Modal imágenes de zona ────────────────────────────────────────────────
   readonly modalAbierto  = signal(false);
@@ -567,5 +577,93 @@ export class PlanoCondominioComponent implements OnInit, AfterViewInit, OnDestro
   }
   labelCorto(nombre: string): string {
     return nombre.length > 13 ? nombre.slice(0, 12) + '…' : nombre;
+  }
+
+  // ── Heatmap ───────────────────────────────────────────────────────────────
+
+  toggleHeatmap() {
+    this.mostrarHeatmap.update(v => !v);
+    if (this.mostrarHeatmap() && this._eventosXCam.size === 0) {
+      this._cargarEventos();
+    } else {
+      this._dibujarHeatmap();
+    }
+  }
+
+  private _cargarEventos() {
+    this.cargandoHeat.set(true);
+    this.http.get<any>(`${entorno.apiUrl}/eventos/reportes/resumen/?dias=90`).subscribe({
+      next: datos => {
+        this._eventosXCam.clear();
+        const mapa = new Map<number, number>();
+        for (const c of (datos.por_camara ?? [])) {
+          this._eventosXCam.set(+c.id, c.total);
+          mapa.set(+c.id, c.total);
+        }
+        this.totalEventosCam.set(mapa);
+        this.cargandoHeat.set(false);
+        this._dibujarHeatmap();
+      },
+      error: () => this.cargandoHeat.set(false),
+    });
+  }
+
+  private _dibujarHeatmap() {
+    const canvas = this.heatCanvasRef?.nativeElement;
+    if (!canvas) return;
+    const W = this.imgNatW();
+    const H = this.imgNatH();
+    if (!W || !H) return;
+
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, W, H);
+
+    if (!this.mostrarHeatmap()) return;
+
+    const vals = Array.from(this._eventosXCam.values());
+    const maxTotal = vals.length ? Math.max(...vals, 1) : 1;
+    const R = Math.max(W, H) * 0.13;
+
+    for (const pos of this.posiciones()) {
+      const total = this._eventosXCam.get(pos.camaraId) ?? 0;
+      const intensity = total / maxTotal;
+      const cx = pos.pos_x * W;
+      const cy = pos.pos_y * H;
+
+      let color: string;
+      if (intensity > 0.66)      color = '248,81,73';   // rojo
+      else if (intensity > 0.33) color = '210,153,34';  // naranja
+      else if (total > 0)        color = '63,185,80';   // verde
+      else                        color = '100,100,100'; // gris (0 eventos)
+
+      const alpha = total > 0 ? 0.28 + intensity * 0.52 : 0.15;
+      const grad  = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+      grad.addColorStop(0,   `rgba(${color},${alpha})`);
+      grad.addColorStop(0.4, `rgba(${color},${alpha * 0.55})`);
+      grad.addColorStop(1,   'rgba(0,0,0,0)');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Número de eventos encima del pin
+      if (total > 0) {
+        const fontSize = Math.max(14, R * 0.28);
+        ctx.font      = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(0,0,0,0.65)';
+        ctx.fillText(String(total), cx + 1, cy + 1);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(String(total), cx, cy);
+      }
+    }
+  }
+
+  eventosEnCamara(camaraId: number): number {
+    return this.totalEventosCam().get(camaraId) ?? 0;
   }
 }

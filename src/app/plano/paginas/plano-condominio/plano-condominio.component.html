@@ -64,6 +64,18 @@
               <span class="material-icons">fit_screen</span>
             </button>
             <div class="toolbar-sep"></div>
+            <button class="btn-icon btn-icon--heat"
+                    [class.activo]="mostrarHeatmap()"
+                    [disabled]="cargandoHeat()"
+                    (click)="toggleHeatmap()"
+                    title="Mapa de calor de infracciones">
+              @if (cargandoHeat()) {
+                <span class="material-icons spin">sync</span>
+              } @else {
+                <span class="material-icons">whatshot</span>
+              }
+            </button>
+            <div class="toolbar-sep"></div>
             <button class="btn-icon" [class.activo]="modoEliminar()" (click)="toggleModoEliminar()" title="Quitar pin">
               <span class="material-icons">remove_circle_outline</span>
             </button>
@@ -92,6 +104,11 @@
                  alt="Plano"
                  (load)="onImageLoad()"
                  draggable="false" />
+
+            <!-- Canvas heatmap overlay -->
+            <canvas #heatCanvas class="heat-canvas"
+                    [style.opacity]="mostrarHeatmap() ? '1' : '0'">
+            </canvas>
 
             <!-- SVG overlay: viewBox = dimensiones reales de imagen → pines sin distorsión -->
             <svg class="plano-svg" [attr.viewBox]="svgViewBox" preserveAspectRatio="none">
@@ -167,13 +184,21 @@
 
               <div class="cam-info">
                 <span class="cam-nombre">{{ cam.nombre_ubicacion }}</span>
-                @if (estaColocada(cam.camara_id)) {
-                  <span class="cam-badge cam-badge--ok">
-                    <span class="material-icons" style="font-size:10px">place</span> Colocada
-                  </span>
-                } @else {
-                  <span class="cam-badge">Sin posición</span>
-                }
+                <div class="cam-badges-row">
+                  @if (estaColocada(cam.camara_id)) {
+                    <span class="cam-badge cam-badge--ok">
+                      <span class="material-icons" style="font-size:10px">place</span> Colocada
+                    </span>
+                  } @else {
+                    <span class="cam-badge">Sin posición</span>
+                  }
+                  @if (mostrarHeatmap() && eventosEnCamara(cam.camara_id) > 0) {
+                    <span class="cam-badge cam-badge--heat">
+                      <span class="material-icons" style="font-size:10px">whatshot</span>
+                      {{ eventosEnCamara(cam.camara_id) }}
+                    </span>
+                  }
+                </div>
               </div>
 
               @if (estaColocada(cam.camara_id)) {

@@ -141,6 +141,21 @@
   width: 100%; height: 100%;
   pointer-events: all;
   overflow: visible;
+  z-index: 2;
+}
+
+.heat-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  transition: opacity .3s ease;
+  z-index: 1;
+}
+
+.btn-icon--heat {
+  &.activo { background: rgba(248,81,73,.2); color: #f85149; border-color: rgba(248,81,73,.5); }
+  &:not(.activo):hover { color: #f85149; }
 }
 
 // ── Panel cámaras ─────────────────────────────────────────────────────────────
@@ -198,12 +213,17 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+.cam-badges-row {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+
 .cam-badge {
   display: inline-flex; align-items: center; gap: 3px;
   font-size: .67rem; border-radius: 4px; padding: 1px 5px;
   background: var(--superficie-2); color: var(--texto-2);
   border: 1px solid var(--borde);
-  &--ok { background: color-mix(in srgb, var(--exito) 18%, transparent); color: var(--exito); border-color: transparent; }
+  &--ok   { background: color-mix(in srgb, var(--exito) 18%, transparent); color: var(--exito); border-color: transparent; }
+  &--heat { background: rgba(248,81,73,.15); color: #f85149; border-color: rgba(248,81,73,.3); }
 }
 
 .btn-quitar {
