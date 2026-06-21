@@ -5,5 +5,7 @@ import { AutenticacionServicio } from '../../compartido/servicios/autenticacion.
 export const redirectPorRolGuard: CanActivateFn = () => {
   const auth   = inject(AutenticacionServicio);
   const router = inject(Router);
-  return router.createUrlTree([auth.esAdmin() ? '/dashboard' : '/guardia']);
+  if (auth.esSuperAdmin()) return router.createUrlTree(['/superadmin']);
+  if (auth.esAdmin())      return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/guardia']);
 };

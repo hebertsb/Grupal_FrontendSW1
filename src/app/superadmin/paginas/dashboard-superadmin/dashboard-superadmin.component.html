@@ -1,0 +1,99 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">admin_panel_settings</span>
+    Plataforma SIVIC
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    @if (cargando()) {
+      <p class="texto-2">Cargando datos de la plataforma…</p>
+    } @else {
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        @for (s of stats(); track s.etiqueta) {
+          <div class="stat-card">
+            <span class="material-icons stat-card__icono" [style.color]="s.color">{{ s.icono }}</span>
+            <div class="stat-card__datos">
+              <span class="stat-card__valor">{{ s.valor }}</span>
+              <span class="stat-card__etiqueta texto-2">{{ s.etiqueta }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Acciones rápidas -->
+      <h2 class="seccion-titulo">Gestión de plataforma</h2>
+      <div class="accesos-grid">
+        <a routerLink="/superadmin/condominios" class="acceso-card">
+          <span class="material-icons">apartment</span>
+          <span>Condominios</span>
+        </a>
+        <a routerLink="/superadmin/planes" class="acceso-card">
+          <span class="material-icons">workspace_premium</span>
+          <span>Planes</span>
+        </a>
+        <a routerLink="/superadmin/usuarios" class="acceso-card">
+          <span class="material-icons">group</span>
+          <span>Todos los usuarios</span>
+        </a>
+        <a routerLink="/superadmin/suscripciones" class="acceso-card acceso-card--advertencia">
+          <span class="material-icons">credit_card</span>
+          <span>Suscripciones</span>
+        </a>
+      </div>
+
+      <!-- Tabla condominios -->
+      <h2 class="seccion-titulo">Condominios registrados</h2>
+
+      @if (condominios().length === 0) {
+        <p class="texto-2">No hay condominios registrados aún.</p>
+      } @else {
+        <div class="tabla-card">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Condominio</th>
+                <th>Ubicación</th>
+                <th>Plan</th>
+                <th>Estado</th>
+                <th>Vence</th>
+                <th>Stripe</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of condominios(); track c.condominio_id) {
+                <tr>
+                  <td class="texto-2">{{ c.condominio_id }}</td>
+                  <td class="nombre-condo">{{ c.nombre }}</td>
+                  <td class="texto-2">{{ c.ubicacion || '—' }}</td>
+                  <td>
+                    @if (c.suscripcion) {
+                      <span class="badge-plan">{{ c.suscripcion.plan_nombre }}</span>
+                    } @else {
+                      <span class="texto-2">—</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="badge-estado" [style.border-color]="colorEstado(c)" [style.color]="colorEstado(c)">
+                      {{ etiquetaEstado(c) }}
+                    </span>
+                  </td>
+                  <td class="texto-2">
+                    {{ c.suscripcion?.periodo_actual_fin?.substring(0, 10) || '—' }}
+                  </td>
+                  <td class="texto-2 stripe-id">
+                    {{ c.stripe_cliente_id ? c.stripe_cliente_id.substring(0, 18) + '…' : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    }
+  </div>
+</div>

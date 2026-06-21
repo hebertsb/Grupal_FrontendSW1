@@ -67,6 +67,11 @@ export const rutas: Routes = [
         loadComponent: () => import('./plano/paginas/plano-condominio/plano-condominio.component').then(m => m.PlanoCondominioComponent),
         title: 'SIVIC — Plano del Condominio',
       },
+      {
+        path: 'superadmin',
+        loadComponent: () => import('./superadmin/paginas/dashboard-superadmin/dashboard-superadmin.component').then(m => m.DashboardSuperAdminComponent),
+        title: 'SIVIC — Plataforma',
+      },
     ],
   },
   { path: '**', redirectTo: 'camaras' },
