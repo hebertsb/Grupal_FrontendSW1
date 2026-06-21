@@ -78,7 +78,7 @@
                 [attr.y]="d.bbox.y * 100 + 8"
                 fill="white" font-size="2.8" font-family="sans-serif" font-weight="700"
                 text-anchor="middle">
-            {{ (d.confianza * 100).toFixed(0) }}%
+            {{ d.raza || ((d.confianza * 100).toFixed(0) + '%') }}
           </text>
         }
       </svg>
@@ -94,6 +94,8 @@
                      alerta === 'merodeo' ? 'Merodeo' :
                      alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
                      alerta === 'vehiculo_mal_estacionado' ? 'Vehículo Mal Estacionado' :
+                     alerta === 'perro_sin_correa' ? 'Mascota Suelta' :
+                     alerta === 'heces_detectadas' ? 'Heces Detectadas' :
                      alerta === 'personas_peleando' ? 'Pelea Detectada' :
                      alerta === 'caida_persona' ? 'Caída de Persona' :
                      alerta === 'intrusion_nocturna' ? 'Intrusión Nocturna' :
@@ -139,7 +141,7 @@
                 [attr.y]="d.bbox.y * 100 + 8"
                 fill="white" font-size="2.8" font-family="sans-serif" font-weight="700"
                 text-anchor="middle">
-            {{ (d.confianza * 100).toFixed(0) }}%
+            {{ d.raza || ((d.confianza * 100).toFixed(0) + '%') }}
           </text>
         }
       </svg>
@@ -169,8 +171,8 @@
         @for (alerta of alertasModel(); track alerta) {
           <div class="ia-resultado-badge ia-resultado-badge--alerta" title="Alerta de infracción de convivencia">
             <span class="material-icons">warning</span>
-            <span>{{ alerta === 'sin_correa' ? 'Mascota Suelta' :
-                     alerta === 'heces_no_limpiadas' ? 'Heces Detectadas' :
+            <span>{{ alerta === 'perro_sin_correa' ? 'Mascota Suelta' :
+                     alerta === 'heces_detectadas' ? 'Heces Detectadas' :
                      alerta === 'zona_restringida_persona' ? 'Zona Restringida' :
                      alerta === 'merodeo' ? 'Merodeo' :
                      alerta === 'vehiculo_zona_restringida' ? 'Vehículo no autorizado' :
@@ -196,6 +198,9 @@
     </button>
     <button [class.activo]="modoFiltro() === 'vehiculos'" (click)="modoFiltro.set('vehiculos')" title="Enfocarse en vehículos">
       <span class="material-icons">directions_car</span>
+    </button>
+    <button [class.activo]="modoFiltro() === 'mascotas'" (click)="modoFiltro.set('mascotas')" title="Enfocarse en mascotas">
+      <span class="material-icons">pets</span>
     </button>
     <button [class.activo]="modoFiltro() === 'todo'"      (click)="modoFiltro.set('todo')"      title="Mostrar todo">
       <span class="material-icons">grid_view</span>

@@ -41,10 +41,11 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly iaVivaActiva   = signal(false);
   readonly conteoPersonas = signal(0);
   readonly nivel          = signal<'normal' | 'sospechoso' | 'critico' | null>(null);
-  readonly modoFiltro     = signal<'personas' | 'vehiculos' | 'todo'>('todo');
+  readonly modoFiltro     = signal<'personas' | 'vehiculos' | 'mascotas' | 'todo'>('todo');
 
   private readonly _ALERTAS_PERSONA  = new Set(['zona_restringida_persona', 'merodeo', 'personas_peleando', 'caida_persona', 'intrusion_nocturna', 'acceso_fuera_horario']);
   private readonly _ALERTAS_VEHICULO = new Set(['vehiculo_zona_restringida', 'vehiculo_mal_estacionado']);
+  private readonly _ALERTAS_MASCOTA  = new Set(['perro_sin_correa', 'heces_detectadas']);
 
   readonly esLocal       = computed(() => this.camara.rtsp_url.startsWith('local://'));
   readonly localFrameUrl = signal<string | null>(null);
@@ -97,7 +98,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   private _llamarIaViva() {
     if (this.analizando()) return;
     this.analizando.set(true);
-    this.ia.analizarCamaraViva(this.camara.camara_id).subscribe({
+    this.ia.analizarCamaraViva(this.camara.camara_id, this.modoFiltro()).subscribe({
       next: r => {
         const dets = this._filtrarDets(r.detecciones ?? []);
         this.detecciones.set(dets);
@@ -114,6 +115,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     switch (this.modoFiltro()) {
       case 'personas':  return dets.filter(d => d.clase === 'persona'  && d.confianza >= 0.95);
       case 'vehiculos': return dets.filter(d => d.clase === 'vehiculo' && d.confianza >= 0.5);
+      case 'mascotas':  return dets.filter(d => ['perro', 'dog', 'mascota', 'heces', 'feces', 'poop'].includes(d.clase.toLowerCase()) && d.confianza >= 0.5);
       default:          return dets.filter(d => d.confianza >= 0.5);
     }
   }
@@ -122,6 +124,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     switch (this.modoFiltro()) {
       case 'personas':  return alertas.filter(a => this._ALERTAS_PERSONA.has(a));
       case 'vehiculos': return alertas.filter(a => this._ALERTAS_VEHICULO.has(a));
+      case 'mascotas':  return alertas.filter(a => this._ALERTAS_MASCOTA.has(a));
       default:          return alertas;
     }
   }
@@ -222,7 +225,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   analizarBlob(blob: Blob) {
     if (this.analizando()) return;
     this.analizando.set(true);
-    this.ia.analizarFramePersona(blob).subscribe({
+    this.ia.analizarFramePersona(blob, this.modoFiltro()).subscribe({
       next: r => {
         const dets = this._filtrarDets(r.detecciones ?? []);
         this.detecciones.set(dets);

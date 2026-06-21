@@ -8,6 +8,9 @@ export interface Deteccion {
   clase:     string;
   confianza: number;
   bbox: { x: number; y: number; w: number; h: number };
+  raza?: string;
+  suelto?: boolean;
+  clase_heces?: string;
 }
 
 export interface ResultadoAnalisis {
@@ -46,9 +49,10 @@ export class IaServicio {
     );
   }
 
-  analizarFramePersona(imagen: Blob): Observable<ResultadoAnalisis> {
+  analizarFramePersona(imagen: Blob, modoFiltro: string = 'todo'): Observable<ResultadoAnalisis> {
     const fd = new FormData();
     fd.append('imagen', imagen, 'frame.jpg');
+    fd.append('modo_filtro', modoFiltro);
     return this.http.post<ResultadoAnalisis>(
       `${entorno.apiUrl}/camaras/analizar_persona/`,
       fd,
@@ -56,10 +60,10 @@ export class IaServicio {
     );
   }
 
-  analizarCamaraViva(camaraId: number): Observable<ResultadoAnalisis> {
+  analizarCamaraViva(camaraId: number, modoFiltro: string = 'todo'): Observable<ResultadoAnalisis> {
     return this.http.post<ResultadoAnalisis>(
       `${entorno.apiUrl}/camaras/${camaraId}/analizar_ia/`,
-      {},
+      { modo_filtro: modoFiltro },
       { headers: this.headers() }
     );
   }
