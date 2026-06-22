@@ -194,7 +194,11 @@ export class GestionCamarasComponent implements OnInit {
     { value: 'area_comun',          label: 'Área común (piscina, quincho, etc.)' },
   ];
 
-  formZona = { tipo_zona: 'zona_prohibida' };
+  formZona = {
+    tipo_zona:   'zona_prohibida',
+    hora_inicio: '08:00',
+    hora_fin:    '20:00',
+  };
   errorZona = signal('');
 
   frameUrlZona(): string {
@@ -243,6 +247,14 @@ export class GestionCamarasComponent implements OnInit {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
+  usarFrameCompleto(canvas: HTMLCanvasElement) {
+    this.puntosPoly = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(rect.width);
+    canvas.height = Math.round(rect.height);
+    this._dibujarPoligono(canvas);
+  }
+
   private _dibujarPoligono(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d')!;
     const w = canvas.width;
@@ -284,15 +296,19 @@ export class GestionCamarasComponent implements OnInit {
     }
     this.errorZona.set('');
     this.guardandoZona.set(true);
+    const configuracion = this.formZona.tipo_zona === 'horario_restringido'
+      ? { hora_inicio: this.formZona.hora_inicio, hora_fin: this.formZona.hora_fin }
+      : {};
     this.srv.crearZona({
       camara: this.camaraZonasId()!,
       tipo_zona: this.formZona.tipo_zona,
       poligono_coordenadas: this.puntosPoly,
+      configuracion,
     }).subscribe({
       next: () => {
         this.guardandoZona.set(false);
         this.puntosPoly = [];
-        this.formZona = { tipo_zona: 'zona_prohibida' };
+        this.formZona = { tipo_zona: 'zona_prohibida', hora_inicio: '08:00', hora_fin: '20:00' };
         this.cargarZonas(this.camaraZonasId()!);
       },
       error: () => { this.guardandoZona.set(false); this.errorZona.set('Error al guardar zona'); },

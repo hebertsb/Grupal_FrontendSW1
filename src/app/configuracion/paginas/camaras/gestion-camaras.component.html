@@ -121,7 +121,10 @@
           <div class="zona-item">
             <span class="material-icons" style="color:var(--primario);font-size:16px">pentagon</span>
             <span class="zona-item__tipo">{{ labelTipo(z.tipo_zona) }}</span>
-            <span class="texto-2 zona-item__puntos">{{ z.poligono_coordenadas.length }} puntos</span>
+            @if (z.tipo_zona === 'horario_restringido' && z.configuracion?.hora_inicio) {
+              <span class="texto-2" style="font-size:11px">{{ z.configuracion!.hora_inicio }}–{{ z.configuracion!.hora_fin }}</span>
+            }
+            <span class="texto-2 zona-item__puntos">{{ z.poligono_coordenadas.length }} pts</span>
             <button class="btn-icono btn-icono--rojo" style="margin-left:auto"
                     title="Eliminar zona" (click)="eliminarZona(z.roi_id!)">
               <span class="material-icons">delete</span>
@@ -143,6 +146,24 @@
           }
         </select>
       </div>
+
+      <!-- Horario permitido (solo visible para horario_restringido) -->
+      @if (formZona.tipo_zona === 'horario_restringido') {
+        <div class="zona-horario-fila">
+          <div class="campo" style="flex:1">
+            <label class="campo__etiqueta">Hora inicio permitida</label>
+            <input type="time" class="campo__entrada" [(ngModel)]="formZona.hora_inicio" />
+          </div>
+          <div class="campo" style="flex:1">
+            <label class="campo__etiqueta">Hora fin permitida</label>
+            <input type="time" class="campo__entrada" [(ngModel)]="formZona.hora_fin" />
+          </div>
+        </div>
+        <p class="campo__hint texto-2" style="margin-top:-6px">
+          <span class="material-icons" style="font-size:13px;vertical-align:middle">info</span>
+          Fuera de ese rango se generará alerta si hay personas en la zona.
+        </p>
+      }
 
       <!-- Editor visual de polígono -->
       <div class="campo">
@@ -177,6 +198,10 @@
             @else if (puntosPoly.length > 0) { — faltan {{ 3 - puntosPoly.length }} más }
           </span>
           <div style="display:flex;gap:6px">
+            <button type="button" class="btn-icono" title="Usar frame completo"
+                    (click)="usarFrameCompleto(canvasZona)">
+              <span class="material-icons" style="font-size:16px">fullscreen</span>
+            </button>
             <button type="button" class="btn-icono" title="Deshacer último punto"
                     [disabled]="puntosPoly.length === 0"
                     (click)="deshacerUltimo(canvasZona)">

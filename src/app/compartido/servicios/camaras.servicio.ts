@@ -8,6 +8,7 @@ export interface ZonaRoi {
   camara:                number;
   tipo_zona:             string;
   poligono_coordenadas:  number[][];
+  configuracion?:        { hora_inicio?: string; hora_fin?: string };
 }
 
 @Injectable({ providedIn: 'root' })

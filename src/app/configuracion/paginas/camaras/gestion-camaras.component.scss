@@ -246,6 +246,11 @@
   width: 600px;
 }
 
+.zona-horario-fila {
+  display: flex;
+  gap: 10px;
+}
+
 /* ── Campos ── */
 .campo { display: flex; flex-direction: column; gap: 5px; }
 
