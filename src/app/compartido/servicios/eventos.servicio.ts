@@ -9,7 +9,7 @@ export class EventosServicio {
 
   constructor(private http: HttpClient) {}
 
-  listar(params?: { estado?: EstadoEvento; camara_id?: number }) {
+  listar(params?: { estado?: EstadoEvento; camara_id?: number; dias?: number }) {
     return this.http.get<Evento[]>(this.base + '/', { params: params as any });
   }
 

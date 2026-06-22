@@ -22,7 +22,7 @@ export class DashboardGuardiaComponent implements OnInit {
   constructor(private eventosSrv: EventosServicio) {}
 
   ngOnInit() {
-    this.eventosSrv.listar().subscribe({
+    this.eventosSrv.listar({ dias: 1 }).subscribe({
       next: lista => {
         const hoy = new Date().toDateString();
         this.criticas.set(lista.filter(e => prioridadEvento(e) === 'critica').length);
