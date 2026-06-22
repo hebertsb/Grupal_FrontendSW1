@@ -177,25 +177,36 @@ export class GestionCamarasComponent implements OnInit {
     });
   }
 
-  // ── Gestión Zonas ROI ────────────────────────────────────────────────────
+  // ── Gestión Zonas de vigilancia ─────────────────────────────────────────
   readonly zonaModalOpen   = signal(false);
   readonly zonasCamara     = signal<ZonaRoi[]>([]);
   readonly camaraZonasId   = signal<number | null>(null);
   readonly guardandoZona   = signal(false);
 
+  camaraParaZonas: Camara | null = null;
+  puntosPoly: [number, number][] = [];
+
   readonly TIPOS_ZONA = [
-    { value: 'zona_prohibida',      label: 'Zona Prohibida' },
-    { value: 'horario_restringido', label: 'Horario Restringido (piscina/quinchos)' },
+    { value: 'zona_prohibida',      label: 'Zona prohibida — sin acceso permitido' },
+    { value: 'horario_restringido', label: 'Horario restringido — activo fuera de 08:00–14:00' },
     { value: 'perimetro',           label: 'Perímetro del condominio' },
-    { value: 'parqueo',             label: 'Parqueo' },
-    { value: 'area_comun',          label: 'Área Común' },
+    { value: 'parqueo',             label: 'Área de parqueo / estacionamiento' },
+    { value: 'area_comun',          label: 'Área común (piscina, quincho, etc.)' },
   ];
 
-  formZona = { tipo_zona: 'zona_prohibida', coordenadas: '[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]]' };
+  formZona = { tipo_zona: 'zona_prohibida' };
   errorZona = signal('');
+
+  frameUrlZona(): string {
+    if (!this.camaraParaZonas) return '';
+    const token = this.auth.obtenerToken() ?? '';
+    return `${entorno.apiUrl}/camaras/${this.camaraParaZonas.camara_id}/ultimo_frame/?token=${encodeURIComponent(token)}&_t=${Date.now()}`;
+  }
 
   abrirZonas(cam: Camara) {
     this.camaraZonasId.set(cam.camara_id);
+    this.camaraParaZonas = cam;
+    this.puntosPoly = [];
     this.zonaModalOpen.set(true);
     this.cargarZonas(cam.camara_id);
   }
@@ -207,13 +218,68 @@ export class GestionCamarasComponent implements OnInit {
     });
   }
 
+  agregarPunto(event: MouseEvent, canvas: HTMLCanvasElement) {
+    const rect = canvas.getBoundingClientRect();
+    if (canvas.width !== Math.round(rect.width) || canvas.height !== Math.round(rect.height)) {
+      canvas.width  = Math.round(rect.width);
+      canvas.height = Math.round(rect.height);
+    }
+    const x = parseFloat(((event.clientX - rect.left) / rect.width ).toFixed(4));
+    const y = parseFloat(((event.clientY - rect.top ) / rect.height).toFixed(4));
+    this.puntosPoly.push([x, y]);
+    this._dibujarPoligono(canvas);
+  }
+
+  deshacerUltimo(canvas: HTMLCanvasElement) {
+    if (this.puntosPoly.length === 0) return;
+    this.puntosPoly.pop();
+    canvas.width = canvas.width; // clear
+    this._dibujarPoligono(canvas);
+  }
+
+  limpiarPoligono(canvas: HTMLCanvasElement) {
+    this.puntosPoly = [];
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  private _dibujarPoligono(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d')!;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    if (this.puntosPoly.length === 0) return;
+
+    ctx.beginPath();
+    ctx.moveTo(this.puntosPoly[0][0] * w, this.puntosPoly[0][1] * h);
+    for (let i = 1; i < this.puntosPoly.length; i++) {
+      ctx.lineTo(this.puntosPoly[i][0] * w, this.puntosPoly[i][1] * h);
+    }
+    if (this.puntosPoly.length >= 3) ctx.closePath();
+
+    ctx.strokeStyle = '#f8c146';
+    ctx.lineWidth   = 2.5;
+    ctx.stroke();
+    if (this.puntosPoly.length >= 3) {
+      ctx.fillStyle = 'rgba(248,193,70,0.18)';
+      ctx.fill();
+    }
+
+    for (let i = 0; i < this.puntosPoly.length; i++) {
+      const [px, py] = this.puntosPoly[i];
+      ctx.beginPath();
+      ctx.arc(px * w, py * h, i === 0 ? 7 : 5, 0, 2 * Math.PI);
+      ctx.fillStyle   = i === 0 ? '#f8c146' : '#fff';
+      ctx.strokeStyle = i === 0 ? '#fff' : '#f8c146';
+      ctx.lineWidth   = 2;
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+
   guardarZona() {
-    let puntos: number[][];
-    try {
-      puntos = JSON.parse(this.formZona.coordenadas);
-      if (!Array.isArray(puntos) || puntos.length < 3) throw new Error();
-    } catch {
-      this.errorZona.set('Coordenadas inválidas. Formato: [[x,y],[x,y],[x,y],...]');
+    if (this.puntosPoly.length < 3) {
+      this.errorZona.set('Dibuja al menos 3 puntos sobre la imagen de la cámara');
       return;
     }
     this.errorZona.set('');
@@ -221,11 +287,12 @@ export class GestionCamarasComponent implements OnInit {
     this.srv.crearZona({
       camara: this.camaraZonasId()!,
       tipo_zona: this.formZona.tipo_zona,
-      poligono_coordenadas: puntos,
+      poligono_coordenadas: this.puntosPoly,
     }).subscribe({
       next: () => {
         this.guardandoZona.set(false);
-        this.formZona = { tipo_zona: 'zona_prohibida', coordenadas: '[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]]' };
+        this.puntosPoly = [];
+        this.formZona = { tipo_zona: 'zona_prohibida' };
         this.cargarZonas(this.camaraZonasId()!);
       },
       error: () => { this.guardandoZona.set(false); this.errorZona.set('Error al guardar zona'); },
@@ -238,7 +305,7 @@ export class GestionCamarasComponent implements OnInit {
   }
 
   labelTipo(tipo: string): string {
-    return this.TIPOS_ZONA.find(t => t.value === tipo)?.label ?? tipo;
+    return this.TIPOS_ZONA.find(t => t.value === tipo)?.label?.split(' — ')[0] ?? tipo;
   }
 
   private setEstado(id: number, estado: EstadoConexion, msg: string) {

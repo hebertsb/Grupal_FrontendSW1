@@ -212,6 +212,40 @@
   .material-icons { font-size: 16px; }
 }
 
+/* ── Editor visual de zonas ── */
+.zona-canvas-contenedor {
+  position: relative; width: 100%; border-radius: 10px; overflow: hidden;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+  min-height: 160px; display: flex; align-items: center; justify-content: center;
+}
+
+.zona-canvas-fondo {
+  width: 100%; height: auto; display: block;
+  max-height: 260px; object-fit: contain;
+}
+
+.zona-canvas-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  cursor: crosshair;
+}
+
+.zona-canvas-placeholder {
+  position: absolute; display: flex; flex-direction: column;
+  align-items: center; gap: 6px; color: var(--texto-2);
+  pointer-events: none;
+}
+
+.zona-canvas-acciones {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding: 6px 10px;
+  background: var(--superficie-2); border-radius: 8px;
+  border: 1px solid var(--borde);
+}
+
+.modal--zonas {
+  width: 600px;
+}
+
 /* ── Campos ── */
 .campo { display: flex; flex-direction: column; gap: 5px; }
 

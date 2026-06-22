@@ -83,7 +83,7 @@
               <button class="btn-icono" title="Editar" (click)="abrirEditar(cam)">
                 <span class="material-icons">edit</span>
               </button>
-              <button class="btn-icono" title="Zonas ROI" (click)="abrirZonas(cam)" style="color:var(--primario)">
+              <button class="btn-icono" title="Zonas de vigilancia" (click)="abrirZonas(cam)" style="color:var(--primario)">
                 <span class="material-icons">crop_free</span>
               </button>
               <button class="btn-icono" [title]="cam.is_active ? 'Desactivar' : 'Activar'"
@@ -103,13 +103,13 @@
   </div>
 </div>
 
-<!-- ── Modal Zonas ROI ── -->
+<!-- ── Modal Zonas de vigilancia ── -->
 @if (zonaModalOpen()) {
   <div class="modal-fondo" (click)="zonaModalOpen.set(false)">
     <div class="modal modal--zonas" (click)="$event.stopPropagation()">
       <h3 class="modal__titulo">
         <span class="material-icons">crop_free</span>
-        Zonas ROI — Cámara #{{ camaraZonasId() }}
+        Zonas de vigilancia — {{ camaraParaZonas?.nombre_ubicacion ?? ('Cámara #' + camaraZonasId()) }}
       </h3>
 
       <!-- Lista zonas existentes -->
@@ -133,10 +133,10 @@
       <hr style="border-color:var(--borde);margin:14px 0">
 
       <!-- Agregar zona -->
-      <p style="font-size:12px;font-weight:700;margin-bottom:8px">Agregar zona</p>
+      <p style="font-size:12px;font-weight:700;margin-bottom:8px">Agregar zona de vigilancia</p>
 
       <div class="campo">
-        <label class="campo__etiqueta">Tipo de zona</label>
+        <label class="campo__etiqueta">Tipo de área</label>
         <select class="campo__entrada" [(ngModel)]="formZona.tipo_zona">
           @for (t of TIPOS_ZONA; track t.value) {
             <option [value]="t.value">{{ t.label }}</option>
@@ -144,15 +144,51 @@
         </select>
       </div>
 
+      <!-- Editor visual de polígono -->
       <div class="campo">
-        <label class="campo__etiqueta">Coordenadas (JSON normalizadas 0.0–1.0)</label>
-        <textarea class="campo__entrada" rows="3" [(ngModel)]="formZona.coordenadas"
-                  style="font-family:monospace;font-size:12px"
-                  placeholder='[[0.1,0.1],[0.9,0.1],[0.9,0.9],[0.1,0.9]]'></textarea>
-        <span class="campo__hint texto-2">
-          Cada punto [x, y] relativo al ancho/alto de la imagen (0=izquierda/arriba, 1=derecha/abajo).
-          Mínimo 3 puntos. Ej. zona completa: [[0.0,0.0],[1.0,0.0],[1.0,1.0],[0.0,1.0]]
-        </span>
+        <label class="campo__etiqueta">
+          Dibuja el área en la imagen
+          <span class="campo__hint texto-2" style="display:block;font-weight:400;margin-top:2px">
+            Haz clic en la imagen para marcar los vértices del área. Mínimo 3 puntos.
+            El primer punto (amarillo grande) es el origen del polígono.
+          </span>
+        </label>
+        <div class="zona-canvas-contenedor">
+          <img [src]="frameUrlZona()"
+               class="zona-canvas-fondo"
+               alt="Vista de cámara"
+               (error)="$any($event.target).style.display='none'" />
+          <canvas #canvasZona
+                  class="zona-canvas-overlay"
+                  (click)="agregarPunto($event, canvasZona)">
+          </canvas>
+          @if (puntosPoly.length === 0) {
+            <div class="zona-canvas-placeholder">
+              <span class="material-icons" style="font-size:28px;opacity:0.4">touch_app</span>
+              <span style="font-size:12px;opacity:0.6">Haz clic para agregar puntos</span>
+            </div>
+          }
+        </div>
+        <div class="zona-canvas-acciones">
+          <span class="texto-2" style="font-size:12px">
+            <span class="material-icons" style="font-size:14px;vertical-align:middle">pentagon</span>
+            {{ puntosPoly.length }} punto(s)
+            @if (puntosPoly.length >= 3) { — área lista ✓ }
+            @else if (puntosPoly.length > 0) { — faltan {{ 3 - puntosPoly.length }} más }
+          </span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn-icono" title="Deshacer último punto"
+                    [disabled]="puntosPoly.length === 0"
+                    (click)="deshacerUltimo(canvasZona)">
+              <span class="material-icons" style="font-size:16px">undo</span>
+            </button>
+            <button type="button" class="btn-icono btn-icono--rojo" title="Limpiar todos los puntos"
+                    [disabled]="puntosPoly.length === 0"
+                    (click)="limpiarPoligono(canvasZona)">
+              <span class="material-icons" style="font-size:16px">clear</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       @if (errorZona()) {
@@ -163,9 +199,9 @@
       }
 
       <div class="modal__acciones">
-        <button class="boton-primario" (click)="guardarZona()" [disabled]="guardandoZona()">
+        <button class="boton-primario" (click)="guardarZona()" [disabled]="guardandoZona() || puntosPoly.length < 3">
           <span class="material-icons">add</span>
-          {{ guardandoZona() ? 'Guardando…' : 'Agregar zona' }}
+          {{ guardandoZona() ? 'Guardando…' : 'Guardar zona' }}
         </button>
         <button class="boton-secundario" (click)="zonaModalOpen.set(false)">Cerrar</button>
       </div>
