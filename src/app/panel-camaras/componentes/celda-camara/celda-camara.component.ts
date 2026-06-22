@@ -114,8 +114,20 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
     switch (this.modoFiltro()) {
       case 'personas':  return dets.filter(d => d.clase === 'persona'  && d.confianza >= 0.5);
       case 'vehiculos': return dets.filter(d => d.clase === 'vehiculo' && d.confianza >= 0.5);
-      case 'mascotas':  return dets.filter(d => ['perro', 'dog', 'mascota', 'heces', 'feces', 'poop'].includes(d.clase.toLowerCase()) && d.confianza >= 0.5);
-      default:          return dets.filter(d => d.confianza >= 0.5);
+      case 'mascotas':  return dets.filter(d => {
+        const c = d.clase.toLowerCase();
+        const esPerro = ['perro', 'dog', 'mascota'].includes(c);
+        const esHeces = ['heces', 'feces', 'poop'].includes(c);
+        if (esPerro) return d.confianza >= 0.3;
+        if (esHeces) return d.confianza >= 0.5;
+        return false;
+      });
+      default:          return dets.filter(d => {
+        const c = d.clase.toLowerCase();
+        if (['perro', 'dog', 'mascota'].includes(c)) return d.confianza >= 0.3;
+        if (c === 'persona') return d.confianza >= 0.95;
+        return d.confianza >= 0.5;
+      });
     }
   }
 
