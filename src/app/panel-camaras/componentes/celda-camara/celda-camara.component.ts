@@ -235,7 +235,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   onVideoLoaded() {
     // Video cargado → iniciar captura de frames cada 800ms para hacer la simulación más fluida
     clearInterval(this.intervaloFrames);
-    this.intervaloFrames = setInterval(() => this.capturarYAnalizar(), 800);
+    this.intervaloFrames = setInterval(() => this.capturarYAnalizar(), 2500);
   }
 
   private capturarYAnalizar() {
