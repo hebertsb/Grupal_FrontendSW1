@@ -224,6 +224,7 @@ export class GestionCamarasComponent implements OnInit {
   }
 
   private _cargarImagenPlano(cam: Camara) {
+    if (!cam.condominio_id) return;
     this.planos.listar(cam.condominio_id).subscribe({
       next: planosList => {
         if (!planosList.length) return;
