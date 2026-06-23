@@ -180,10 +180,11 @@ export class GestionCamarasComponent implements OnInit {
   }
 
   // ── Gestión Zonas de vigilancia ─────────────────────────────────────────
-  readonly zonaModalOpen   = signal(false);
-  readonly zonasCamara     = signal<ZonaRoi[]>([]);
-  readonly camaraZonasId   = signal<number | null>(null);
-  readonly guardandoZona   = signal(false);
+  readonly zonaModalOpen       = signal(false);
+  readonly zonasCamara         = signal<ZonaRoi[]>([]);
+  readonly camaraZonasId       = signal<number | null>(null);
+  readonly guardandoZona       = signal(false);
+  readonly zonaEliminandoId    = signal<number | null>(null);
 
   @ViewChild('canvasZona') canvasZonaRef?: ElementRef<HTMLCanvasElement>;
 
@@ -382,9 +383,25 @@ export class GestionCamarasComponent implements OnInit {
     });
   }
 
+  confirmarEliminarZona(roiId: number) {
+    this.zonaEliminandoId.set(roiId);
+  }
+
+  cancelarEliminarZona() {
+    this.zonaEliminandoId.set(null);
+  }
+
   eliminarZona(roiId: number) {
-    if (!confirm('¿Eliminar esta zona?')) return;
-    this.srv.eliminarZona(roiId).subscribe(() => this.cargarZonas(this.camaraZonasId()!));
+    this.srv.eliminarZona(roiId).subscribe({
+      next: () => {
+        this.zonaEliminandoId.set(null);
+        this.cargarZonas(this.camaraZonasId()!);
+      },
+      error: () => {
+        this.zonaEliminandoId.set(null);
+        this.errorZona.set('Error al eliminar la zona');
+      },
+    });
   }
 
   labelTipo(tipo: string): string {

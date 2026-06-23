@@ -125,10 +125,23 @@
               <span class="texto-2" style="font-size:11px">{{ z.configuracion!.hora_inicio }}–{{ z.configuracion!.hora_fin }}</span>
             }
             <span class="texto-2 zona-item__puntos">{{ z.poligono_coordenadas.length }} pts</span>
-            <button class="btn-icono btn-icono--rojo" style="margin-left:auto"
-                    title="Eliminar zona" (click)="eliminarZona(z.roi_id!)">
-              <span class="material-icons">delete</span>
-            </button>
+
+            @if (zonaEliminandoId() === z.roi_id) {
+              <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--peligro)">¿Eliminar?</span>
+                <button class="btn-icono btn-icono--rojo" title="Confirmar" (click)="eliminarZona(z.roi_id!)">
+                  <span class="material-icons" style="font-size:14px">check</span>
+                </button>
+                <button class="btn-icono" title="Cancelar" (click)="cancelarEliminarZona()">
+                  <span class="material-icons" style="font-size:14px">close</span>
+                </button>
+              </div>
+            } @else {
+              <button class="btn-icono btn-icono--rojo" style="margin-left:auto"
+                      title="Eliminar zona" (click)="confirmarEliminarZona(z.roi_id!)">
+                <span class="material-icons">delete</span>
+              </button>
+            }
           </div>
         }
       </div>
