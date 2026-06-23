@@ -125,7 +125,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       default:          return dets.filter(d => {
         const c = d.clase.toLowerCase();
         if (['perro', 'dog', 'mascota'].includes(c)) return d.confianza >= 0.3;
-        if (c === 'persona') return d.confianza >= 0.95;
+        if (c === 'persona') return d.confianza >= 0.5;
         return d.confianza >= 0.5;
       });
     }
