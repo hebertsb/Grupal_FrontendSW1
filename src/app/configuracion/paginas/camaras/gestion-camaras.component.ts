@@ -215,7 +215,7 @@ export class GestionCamarasComponent implements OnInit {
   abrirZonas(cam: Camara) {
     this.camaraZonasId.set(cam.camara_id);
     this.camaraParaZonas = cam;
-    this.puntosPoly = [];
+    this.puntosPoly = [[0, 0], [1, 0], [1, 1], [0, 1]];
     this.imagenFondoZona.set('');
     this.zonaModalOpen.set(true);
     this.cargarZonas(cam.camara_id);
