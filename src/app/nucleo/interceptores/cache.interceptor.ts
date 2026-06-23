@@ -5,7 +5,7 @@ import { tap } from 'rxjs/operators';
 const _cache = new Map<string, { res: HttpResponse<unknown>; exp: number }>();
 const TTL_MS = 30_000; // 30 segundos
 
-const NO_CACHE = ['/auth/', '/analizar', '/stream/', '/ultimo_frame/', '/reportes/'];
+const NO_CACHE = ['/auth/', '/analizar', '/stream/', '/ultimo_frame/', '/reportes/', '/zonas-roi/'];
 
 export const cacheInterceptor: HttpInterceptorFn = (req, next) => {
   if (req.method !== 'GET') return next(req);
