@@ -202,17 +202,14 @@
 
   <!-- ── Selector modo IA ── -->
   <div class="celda__modo-ia">
-    <button [class.activo]="modoFiltro() === 'personas'"  (click)="modoFiltro.set('personas')"  title="Enfocarse en personas">
+    <button [class.activo]="modoFiltro() === 'personas'"  (click)="cambiarFiltro('personas')"  title="Detectar personas">
       <span class="material-icons">person</span>
     </button>
-    <button [class.activo]="modoFiltro() === 'vehiculos'" (click)="modoFiltro.set('vehiculos')" title="Enfocarse en vehículos">
+    <button [class.activo]="modoFiltro() === 'vehiculos'" (click)="cambiarFiltro('vehiculos')" title="Detectar vehículos">
       <span class="material-icons">directions_car</span>
     </button>
-    <button [class.activo]="modoFiltro() === 'mascotas'" (click)="modoFiltro.set('mascotas')" title="Enfocarse en mascotas">
+    <button [class.activo]="modoFiltro() === 'mascotas'"  (click)="cambiarFiltro('mascotas')"  title="Detectar mascotas">
       <span class="material-icons">pets</span>
-    </button>
-    <button [class.activo]="modoFiltro() === 'todo'"      (click)="modoFiltro.set('todo')"      title="Mostrar todo">
-      <span class="material-icons">grid_view</span>
     </button>
   </div>
 

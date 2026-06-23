@@ -40,7 +40,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
   readonly iaVivaActiva   = signal(false);
   readonly conteoPersonas = signal(0);
   readonly nivel          = signal<'normal' | 'sospechoso' | 'critico' | null>(null);
-  readonly modoFiltro     = signal<'personas' | 'vehiculos' | 'mascotas' | 'todo'>('todo');
+  readonly modoFiltro     = signal<'personas' | 'vehiculos' | 'mascotas'>('personas');
 
   private readonly _ALERTAS_PERSONA  = new Set(['zona_restringida_persona', 'merodeo', 'personas_peleando', 'caida_persona', 'intrusion_nocturna', 'acceso_fuera_horario']);
   private readonly _ALERTAS_VEHICULO = new Set(['vehiculo_zona_restringida', 'vehiculo_mal_estacionado']);
@@ -60,6 +60,15 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       this._refrescarFrameLocal();
       this.intervaloLocal = setInterval(() => this._refrescarFrameLocal(), 2000);
     }
+    const guardado = localStorage.getItem(`sivic_filtro_${this.camara.camara_id}`);
+    if (guardado === 'personas' || guardado === 'vehiculos' || guardado === 'mascotas') {
+      this.modoFiltro.set(guardado);
+    }
+  }
+
+  cambiarFiltro(modo: 'personas' | 'vehiculos' | 'mascotas') {
+    this.modoFiltro.set(modo);
+    localStorage.setItem(`sivic_filtro_${this.camara.camara_id}`, modo);
   }
 
   private _refrescarFrameLocal() {
@@ -116,17 +125,9 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       case 'vehiculos': return dets.filter(d => d.clase === 'vehiculo' && d.confianza >= 0.5);
       case 'mascotas':  return dets.filter(d => {
         const c = d.clase.toLowerCase();
-        const esPerro = ['perro', 'dog', 'mascota'].includes(c);
-        const esHeces = ['heces', 'feces', 'poop'].includes(c);
-        if (esPerro) return d.confianza >= 0.3;
-        if (esHeces) return d.confianza >= 0.5;
+        if (['perro', 'dog', 'mascota'].includes(c)) return d.confianza >= 0.5;
+        if (['heces', 'feces', 'poop'].includes(c))  return d.confianza >= 0.55;
         return false;
-      });
-      default:          return dets.filter(d => {
-        const c = d.clase.toLowerCase();
-        if (['perro', 'dog', 'mascota'].includes(c)) return d.confianza >= 0.3;
-        if (c === 'persona') return d.confianza >= 0.5;
-        return d.confianza >= 0.5;
       });
     }
   }
@@ -136,7 +137,6 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       case 'personas':  return alertas.filter(a => this._ALERTAS_PERSONA.has(a));
       case 'vehiculos': return alertas.filter(a => this._ALERTAS_VEHICULO.has(a));
       case 'mascotas':  return alertas.filter(a => this._ALERTAS_MASCOTA.has(a));
-      default:          return alertas;
     }
   }
 
