@@ -1,0 +1,89 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px">credit_card</span>
+    Suscripciones
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <div class="barra-acciones">
+      <h2 class="seccion-titulo" style="margin:0">Suscripciones de condominios</h2>
+      <a routerLink="/superadmin" class="btn-secundario">
+        <span class="material-icons">arrow_back</span> Volver
+      </a>
+    </div>
+
+    @if (!cargando()) {
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-card__valor" style="color:var(--exito)">{{ totalActivas() }}</span>
+          <span class="stat-card__etiqueta">Activas</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__valor" style="color:var(--advertencia)">{{ totalPendientes() }}</span>
+          <span class="stat-card__etiqueta">Pago pendiente</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__valor" style="color:var(--peligro)">{{ totalCanceladas() }}</span>
+          <span class="stat-card__etiqueta">Canceladas</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__valor">{{ suscripciones().length }}</span>
+          <span class="stat-card__etiqueta">Total</span>
+        </div>
+      </div>
+    }
+
+    @if (cargando()) {
+      <p class="texto-2">Cargando suscripciones…</p>
+    } @else if (suscripciones().length === 0) {
+      <p class="texto-2">No hay suscripciones registradas.</p>
+    } @else {
+      <div class="tabla-card">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Condominio</th>
+              <th>Plan</th>
+              <th>Estado</th>
+              <th>Inicio período</th>
+              <th>Fin período</th>
+              <th>Stripe ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of suscripciones(); track s.suscripcion_id) {
+              <tr>
+                <td class="texto-2">{{ s.suscripcion_id }}</td>
+                <td class="nombre-condo">{{ s.condominio_nombre }}</td>
+                <td>
+                  <span class="badge-plan">{{ s.plan_nombre }}</span>
+                </td>
+                <td>
+                  <span class="badge-estado" [style.border-color]="colorEstado(s)" [style.color]="colorEstado(s)">
+                    {{ etiquetaEstado(s) }}
+                    @if (s.cancelar_al_vencer) {
+                      <span title="Cancelará al vencer" style="margin-left:4px">⚠</span>
+                    }
+                  </span>
+                </td>
+                <td class="texto-2">{{ formatFecha(s.periodo_actual_inicio) }}</td>
+                <td class="texto-2">{{ formatFecha(s.periodo_actual_fin) }}</td>
+                <td class="texto-2 stripe-id">
+                  @if (s.stripe_suscripcion_id) {
+                    <a [href]="'https://dashboard.stripe.com/test/subscriptions/' + s.stripe_suscripcion_id"
+                       target="_blank" rel="noopener" style="color:var(--primario);text-decoration:none;font-size:11px">
+                      {{ s.stripe_suscripcion_id.substring(0, 22) }}…
+                    </a>
+                  } @else { — }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+</div>

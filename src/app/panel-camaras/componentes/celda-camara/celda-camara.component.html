@@ -2,7 +2,7 @@
      [class.celda--seleccionada]="seleccionada"
      [class.celda--arrastrando]="arrastrando()"
      (dragover)="onDragOver($event)"
-     (dragleave)="onDragLeave()"
+     (dragleave)="onDragLeave($event)"
      (drop)="onDrop($event)">
 
   <!-- ── Zona de drag & drop (siempre activa, visible solo al arrastrar) ── -->

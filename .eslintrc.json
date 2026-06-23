@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/eslintrc",
+  "root": true,
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "parserOptions": {
+        "project": ["tsconfig.json"],
+        "createDefaultProgram": true
+      },
+      "rules": {
+        "no-unused-vars": "warn",
+        "no-console": "warn",
+        "prefer-const": "error",
+        "eqeqeq": ["error", "always"],
+        "camelcase": "error"
+      }
+    },
+    {
+      "files": ["*.html"],
+      "rules": {}
+    }
+  ]
+}

@@ -92,6 +92,11 @@ export const rutas: Routes = [
         loadComponent: () => import('./superadmin/paginas/usuarios/usuarios-superadmin.component').then(m => m.UsuariosSuperAdminComponent),
         title: 'SIVIC — Usuarios plataforma',
       },
+      {
+        path: 'superadmin/suscripciones',
+        loadComponent: () => import('./superadmin/paginas/suscripciones/suscripciones-superadmin.component').then(m => m.SuscripcionesSuperAdminComponent),
+        title: 'SIVIC — Suscripciones',
+      },
     ],
   },
   { path: '**', redirectTo: 'camaras' },
