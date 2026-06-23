@@ -175,7 +175,7 @@
           </span>
         </label>
         <div class="zona-canvas-contenedor">
-          <img [src]="frameUrlZona()"
+          <img [src]="imagenFondoZona() || frameUrlZona()"
                class="zona-canvas-fondo"
                alt="Vista de cámara"
                (error)="$any($event.target).style.display='none'" />

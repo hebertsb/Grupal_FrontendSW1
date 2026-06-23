@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CamarasServicio, ZonaRoi } from '../../../compartido/servicios/camaras.servicio';
 import { IaServicio } from '../../../compartido/servicios/ia.servicio';
 import { AutenticacionServicio } from '../../../compartido/servicios/autenticacion.servicio';
+import { PlanosServicio } from '../../../compartido/servicios/planos.servicio';
 import { Camara } from '../../../compartido/modelos/camara.modelo';
 import { CabeceraComponent } from '../../../compartido/componentes/cabecera/cabecera.component';
 import { entorno } from '../../../../environments/environment';
@@ -32,9 +33,10 @@ type EstadoConexion = 'pendiente' | 'probando' | 'ok' | 'error';
   styleUrl: './gestion-camaras.component.scss',
 })
 export class GestionCamarasComponent implements OnInit {
-  private srv  = inject(CamarasServicio);
-  private ia   = inject(IaServicio);
-  private auth = inject(AutenticacionServicio);
+  private srv    = inject(CamarasServicio);
+  private ia     = inject(IaServicio);
+  private auth   = inject(AutenticacionServicio);
+  private planos = inject(PlanosServicio);
 
   readonly camaras      = signal<Camara[]>([]);
   readonly cargando     = signal(true);
@@ -187,6 +189,7 @@ export class GestionCamarasComponent implements OnInit {
 
   camaraParaZonas: Camara | null = null;
   puntosPoly: [number, number][] = [];
+  readonly imagenFondoZona = signal<string>('');
 
   readonly TIPOS_ZONA = [
     { value: 'zona_prohibida',      label: 'Zona prohibida — sin acceso permitido' },
@@ -213,8 +216,26 @@ export class GestionCamarasComponent implements OnInit {
     this.camaraZonasId.set(cam.camara_id);
     this.camaraParaZonas = cam;
     this.puntosPoly = [];
+    this.imagenFondoZona.set('');
     this.zonaModalOpen.set(true);
     this.cargarZonas(cam.camara_id);
+    this._cargarImagenPlano(cam);
+  }
+
+  private _cargarImagenPlano(cam: Camara) {
+    this.planos.listar(cam.condominio_id).subscribe({
+      next: planosList => {
+        if (!planosList.length) return;
+        const planoId = planosList[0].plano_id!;
+        this.planos.listarImagenesZona(planoId, cam.camara_id!).subscribe({
+          next: imgs => {
+            if (imgs.length) this.imagenFondoZona.set(imgs[0].imagen_url);
+          },
+          error: () => {},
+        });
+      },
+      error: () => {},
+    });
   }
 
   cargarZonas(camaraId: number) {
