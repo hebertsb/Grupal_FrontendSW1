@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CamarasServicio, ZonaRoi } from '../../../compartido/servicios/camaras.servicio';
 import { IaServicio } from '../../../compartido/servicios/ia.servicio';
@@ -183,6 +183,8 @@ export class GestionCamarasComponent implements OnInit {
   readonly camaraZonasId   = signal<number | null>(null);
   readonly guardandoZona   = signal(false);
 
+  @ViewChild('canvasZona') canvasZonaRef?: ElementRef<HTMLCanvasElement>;
+
   camaraParaZonas: Camara | null = null;
   puntosPoly: [number, number][] = [];
 
@@ -217,7 +219,18 @@ export class GestionCamarasComponent implements OnInit {
 
   cargarZonas(camaraId: number) {
     this.srv.listarZonas(camaraId).subscribe({
-      next: z => this.zonasCamara.set(z),
+      next: z => {
+        this.zonasCamara.set(z);
+        setTimeout(() => {
+          const canvas = this.canvasZonaRef?.nativeElement;
+          if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width  = Math.round(rect.width);
+            canvas.height = Math.round(rect.height);
+            this._dibujarPoligono(canvas);
+          }
+        }, 50);
+      },
       error: () => this.zonasCamara.set([]),
     });
   }
@@ -260,8 +273,41 @@ export class GestionCamarasComponent implements OnInit {
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
+
+    // Dibujar zonas existentes en azul
+    const colores: Record<string, string> = {
+      zona_prohibida:      '#ef4444',
+      horario_restringido: '#f97316',
+      perimetro:           '#8b5cf6',
+      parqueo:             '#3b82f6',
+      area_comun:          '#10b981',
+    };
+    for (const zona of this.zonasCamara()) {
+      const pts = zona.poligono_coordenadas;
+      if (!pts || pts.length < 3) continue;
+      const color = colores[zona.tipo_zona] ?? '#60a5fa';
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] * w, pts[0][1] * h);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * w, pts[i][1] * h);
+      ctx.closePath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = 2;
+      ctx.stroke();
+      ctx.fillStyle = color.replace(')', ',0.15)').replace('rgb', 'rgba').replace('#', 'rgba(').replace('rgba(', 'rgba(') ;
+      ctx.fillStyle = color + '33';
+      ctx.fill();
+      // Etiqueta
+      const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length * w;
+      const cy = pts.reduce((s, p) => s + p[1], 0) / pts.length * h;
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.fillText(zona.tipo_zona.replace('_', ' '), cx, cy);
+    }
+
     if (this.puntosPoly.length === 0) return;
 
+    // Dibujar zona nueva en amarillo
     ctx.beginPath();
     ctx.moveTo(this.puntosPoly[0][0] * w, this.puntosPoly[0][1] * h);
     for (let i = 1; i < this.puntosPoly.length; i++) {
