@@ -101,7 +101,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       next: r => {
         const dets = this._filtrarDets(r.detecciones ?? []);
         this.detecciones.set(dets);
-        this.alertasModel.set(this._filtrarAlertas(r.alertas ?? []));
+        this.alertasModel.set([...new Set(this._filtrarAlertas(r.alertas ?? []))]);
         this.conteoPersonas.set(r.conteo_personas ?? dets.filter(d => d.clase === 'persona').length);
         this.nivel.set(r.nivel ?? null);
         this.analizando.set(false);
@@ -217,6 +217,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
 
   cargarArchivo(file: File) {
     clearInterval(this.intervaloFrames);
+    this._detenerIaViva();
     const prev = this.archivoUrl();
     if (prev) URL.revokeObjectURL(prev);
 
@@ -258,7 +259,7 @@ export class CeldaCamaraComponent implements OnInit, OnDestroy {
       next: r => {
         const dets = this._filtrarDets(r.detecciones ?? []);
         this.detecciones.set(dets);
-        this.alertasModel.set(this._filtrarAlertas(r.alertas ?? []));
+        this.alertasModel.set([...new Set(this._filtrarAlertas(r.alertas ?? []))]);
         this.conteoPersonas.set(r.conteo_personas ?? dets.filter(d => d.clase === 'persona').length);
         this.nivel.set(r.nivel ?? null);
         this.analizando.set(false);
