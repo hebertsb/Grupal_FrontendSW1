@@ -357,6 +357,40 @@
   .material-icons { color: #bc8cff; font-size: 22px; flex-shrink: 0; margin-top: 2px; }
   p { color: #e6edf3; font-size: 14px; line-height: 1.6; margin: 0; }
 }
+.asistente-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.asistente-input {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #e6edf3;
+  font-size: 14px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color .2s;
+  &::placeholder { color: #8b949e; }
+  &:focus { border-color: #bc8cff; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+.btn-enviar {
+  background: #bc8cff;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 0 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background .2s;
+  &:hover:not(:disabled) { background: #9a6de0; }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+  .material-icons { font-size: 20px; }
+}
+
 .asistente-ejemplos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .asistente-ejemplos-label { font-size: 12px; color: #8b949e; white-space: nowrap; }
 .ejemplo-chip {

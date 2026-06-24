@@ -54,6 +54,9 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly preguntaTexto  = signal('');
   readonly respuestaIa    = signal('');
   readonly consultando    = signal(false);
+  readonly inputTexto     = signal('');
+  readonly soportaVoz     = typeof window !== 'undefined' && window.isSecureContext &&
+                            !!((window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition);
   private recognition: any = null;
 
   private charts: echarts.ECharts[] = [];
@@ -253,7 +256,19 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.escuchando.set(false);
   }
 
+  enviarTexto() {
+    const texto = this.inputTexto().trim();
+    if (!texto || this.consultando()) return;
+    this.preguntaTexto.set(texto);
+    this.inputTexto.set('');
+    this.consultarGroq(texto);
+  }
+
   iniciarEscucha() {
+    if (!window.isSecureContext) {
+      this.respuestaIa.set('⚠️ La voz requiere HTTPS. Usa el campo de texto para escribir tu pregunta.');
+      return;
+    }
     const SR = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
     if (!SR) { alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.'); return; }
 
@@ -272,7 +287,12 @@ export class ReportesIaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.escuchando.set(false);
       this.consultarGroq(texto);
     };
-    this.recognition.onerror  = () => this.escuchando.set(false);
+    this.recognition.onerror  = (ev: any) => {
+      this.escuchando.set(false);
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        this.respuestaIa.set('⚠️ Micrófono bloqueado (requiere HTTPS). Usa el campo de texto.');
+      }
+    };
     this.recognition.onend    = () => this.escuchando.set(false);
     this.recognition.start();
   }
