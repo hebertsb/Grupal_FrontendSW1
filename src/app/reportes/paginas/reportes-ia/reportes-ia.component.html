@@ -10,16 +10,14 @@
         <h3 class="asistente-titulo">Asistente IA · Consulta por voz o texto</h3>
         <p class="asistente-sub">Pregunta sobre el reporte en lenguaje natural. Powered by Groq · LLaMA 3</p>
       </div>
-      @if (soportaVoz) {
-        @if (!escuchando()) {
-          <button class="btn-mic" [disabled]="consultando()" (click)="iniciarEscucha()">
-            <span class="material-icons">mic</span> Hablar
-          </button>
-        } @else {
-          <button class="btn-mic btn-mic--escuchando" (click)="detenerEscucha()">
-            <span class="material-icons">stop_circle</span> Parar
-          </button>
-        }
+      @if (!escuchando()) {
+        <button class="btn-mic" [disabled]="consultando()" (click)="iniciarEscucha()">
+          <span class="material-icons">mic</span> Hablar
+        </button>
+      } @else {
+        <button class="btn-mic btn-mic--escuchando" (click)="detenerEscucha()">
+          <span class="material-icons">stop_circle</span> Parar
+        </button>
       }
     </div>
 
