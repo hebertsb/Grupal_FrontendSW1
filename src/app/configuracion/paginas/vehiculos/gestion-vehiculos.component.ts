@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { PlacasServicio } from '../../../compartido/servicios/placas.servicio';
 import { PlacaRegistrada } from '../../../compartido/modelos/placa.modelo';
 import { CabeceraComponent } from '../../../compartido/componentes/cabecera/cabecera.component';
@@ -9,7 +10,7 @@ const PATRON_BO = /^(\d{3,4}[A-Z]{2,3}|[A-Z]{2,3}\d{3,4})$/;
 @Component({
   selector: 'app-gestion-vehiculos',
   standalone: true,
-  imports: [FormsModule, CabeceraComponent],
+  imports: [FormsModule, ReactiveFormsModule, DatePipe, CabeceraComponent],
   templateUrl: './gestion-vehiculos.component.html',
   styleUrl: './gestion-vehiculos.component.scss',
 })

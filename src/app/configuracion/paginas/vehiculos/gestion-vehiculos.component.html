@@ -25,16 +25,12 @@
       </div>
     </div>
 
-    <!-- Estado cargando -->
     @if (cargando()) {
       <div class="estado-vacio">
         <span class="material-icons spin">directions_car</span>
         <p>Cargando vehículos…</p>
       </div>
-    }
-
-    <!-- Estado vacío -->
-    @else if (placas().length === 0) {
+    } @else if (placas().length === 0) {
       <div class="estado-vacio">
         <span class="material-icons">no_crash</span>
         <p>No hay vehículos registrados</p>
@@ -45,10 +41,7 @@
           <span class="material-icons">add</span> Registrar primer vehículo
         </button>
       </div>
-    }
-
-    <!-- Tabla de placas -->
-    @else {
+    } @else {
       <div class="tabla-wrapper">
         <table class="tabla">
           <thead>
