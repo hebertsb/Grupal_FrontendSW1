@@ -1,0 +1,170 @@
+<div class="pantalla-completa">
+  <app-cabecera>
+    <span class="material-icons" style="vertical-align:middle;margin-right:6px;color:var(--primario)">directions_car</span>
+    Vehículos Autorizados
+  </app-cabecera>
+
+  <div class="pagina-contenido">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar__info">
+        <span class="toolbar__total">{{ totalActivas() }} vehículos activos · {{ placas().length }} registrados</span>
+        <span class="toolbar__hint texto-2">Solo los vehículos registrados aquí no generarán alerta al ser detectados</span>
+      </div>
+      <div class="toolbar__acciones">
+        <div class="buscador">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Buscar placa o descripción…"
+                 [value]="busqueda()"
+                 (input)="busqueda.set($any($event.target).value)" />
+        </div>
+        <button class="boton-primario" (click)="abrirNueva()">
+          <span class="material-icons">add</span> Agregar vehículo
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado cargando -->
+    @if (cargando()) {
+      <div class="estado-vacio">
+        <span class="material-icons spin">directions_car</span>
+        <p>Cargando vehículos…</p>
+      </div>
+    }
+
+    <!-- Estado vacío -->
+    @else if (placas().length === 0) {
+      <div class="estado-vacio">
+        <span class="material-icons">no_crash</span>
+        <p>No hay vehículos registrados</p>
+        <span class="texto-2" style="font-size:12px;text-align:center">
+          Registra las placas de los vehículos del condominio para que la IA los reconozca
+        </span>
+        <button class="boton-primario" style="margin-top:12px" (click)="abrirNueva()">
+          <span class="material-icons">add</span> Registrar primer vehículo
+        </button>
+      </div>
+    }
+
+    <!-- Tabla de placas -->
+    @else {
+      <div class="tabla-wrapper">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Placa</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th>Registrado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of placasFiltradas(); track p.id) {
+              <tr [class.fila--inactiva]="!p.activa">
+                <td>
+                  <span class="placa-badge" [class.placa-badge--inactiva]="!p.activa">
+                    {{ p.placa }}
+                  </span>
+                </td>
+                <td class="celda-descripcion texto-2">{{ p.descripcion || '—' }}</td>
+                <td>
+                  <button class="chip-estado" [class.chip-estado--activo]="p.activa"
+                          (click)="toggleActiva(p)"
+                          [title]="p.activa ? 'Activo — clic para desactivar' : 'Inactivo — clic para activar'">
+                    <span class="material-icons">{{ p.activa ? 'check_circle' : 'block' }}</span>
+                    {{ p.activa ? 'Activo' : 'Inactivo' }}
+                  </button>
+                </td>
+                <td class="texto-2 celda-fecha">
+                  {{ p.created_at ? (p.created_at | date:'dd/MM/yyyy') : '—' }}
+                </td>
+                <td>
+                  <div class="acciones-fila">
+                    <button class="btn-icono" title="Editar" (click)="abrirEditar(p)">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    <button class="btn-icono btn-icono--peligro" title="Eliminar" (click)="eliminar(p)">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="celda-vacia texto-2">Sin resultados para "{{ busqueda() }}"</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- Modal agregar / editar -->
+@if (modalOpen()) {
+  <div class="overlay" (click)="cerrarModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal__cabeza">
+        <span class="material-icons" style="color:var(--primario)">directions_car</span>
+        <h3>{{ editandoId() ? 'Editar vehículo' : 'Registrar vehículo' }}</h3>
+        <button class="btn-cerrar" (click)="cerrarModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal__cuerpo">
+
+        <div class="campo">
+          <label>Número de placa <span class="requerido">*</span></label>
+          <input type="text"
+                 [value]="form.placa"
+                 (input)="form.placa = normalizarInput($any($event.target).value)"
+                 placeholder="Ej: 1154AER  o  824EDH  o  CAL280"
+                 maxlength="8"
+                 [disabled]="!!editandoId()" />
+          <span class="campo__ayuda texto-2">Formato boliviano: 4 dígitos + 3 letras (o viceversa)</span>
+        </div>
+
+        <div class="campo">
+          <label>Descripción <span class="opcional texto-2">(opcional)</span></label>
+          <input type="text"
+                 [(ngModel)]="form.descripcion"
+                 placeholder="Ej: Auto gris Dpto 401, Camioneta del administrador…"
+                 maxlength="200" />
+        </div>
+
+        <div class="campo campo--inline">
+          <label>
+            <input type="checkbox" [(ngModel)]="form.activa" />
+            Vehículo activo (genera alertas si no se detecta como conocido)
+          </label>
+        </div>
+
+        @if (errorForm()) {
+          <div class="alerta-error">
+            <span class="material-icons">error_outline</span>
+            {{ errorForm() }}
+          </div>
+        }
+      </div>
+
+      <div class="modal__pie">
+        <button class="boton-secundario" (click)="cerrarModal()">Cancelar</button>
+        <button class="boton-primario" (click)="guardar()" [disabled]="guardando()">
+          @if (guardando()) {
+            <span class="material-icons spin">sync</span> Guardando…
+          } @else {
+            <span class="material-icons">save</span>
+            {{ editandoId() ? 'Guardar cambios' : 'Registrar vehículo' }}
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

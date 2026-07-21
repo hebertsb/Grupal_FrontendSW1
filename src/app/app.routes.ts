@@ -58,6 +58,11 @@ export const rutas: Routes = [
         title: 'SIVIC — Usuarios',
       },
       {
+        path: 'configuracion/vehiculos',
+        loadComponent: () => import('./configuracion/paginas/vehiculos/gestion-vehiculos.component').then(m => m.GestionVehiculosComponent),
+        title: 'SIVIC — Vehículos Autorizados',
+      },
+      {
         path: 'auditoria',
         loadComponent: () => import('./auditoria/paginas/logs/logs-auditoria.component').then(m => m.LogsAuditoriaComponent),
         title: 'SIVIC — Auditoría',
